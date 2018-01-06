@@ -1,0 +1,45 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.2.0"
+    id "eclipse"
+    id "idea"
+    id "jaci.openrio.gradle.GradleRIO" version "2018.01.06b"
+}
+
+def TEAM = 2186
+def ROBOT_CLASS = "frc.team2186.robot.Robot"
+
+deploy {
+    targets {
+        target("roborio", jaci.openrio.gradle.frc.RoboRIO) {
+            team = TEAM
+        }
+    }
+    artifacts {
+        // We still use FRCJavaArtifact since kotlin does respond as a Java build.
+        artifact('frcKotlin', jaci.openrio.gradle.frc.FRCJavaArtifact) {
+            targets << "roborio"
+            jar = 'jar'
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile wpilib()
+    compile ctre()
+    compile navx()
+
+    compile "org.jetbrains.kotlin:kotlin-stdlib"
+}
+
+jar {
+    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    manifest jaci.openrio.gradle.GradleRIOPlugin.javaManifest(ROBOT_CLASS)
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.2.1'
+}
