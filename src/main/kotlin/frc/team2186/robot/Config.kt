@@ -12,4 +12,17 @@ object Config {
 
         const val ticksPerRevolution = 1440.0
     }
+
+    object PathFollowing {
+        const val fixedLookahead = 24.0
+        const val maxAccel = 100.0
+        const val nominalDt = 0.0
+        const val completionTolerance = 0.25
+        const val maxVelocity = 100.0
+    }
+
+    object Controls {
+        const val leftJoystickID = 0
+        const val rightJoystickID = 1
+    }
 }

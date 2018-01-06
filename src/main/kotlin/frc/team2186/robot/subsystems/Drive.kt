@@ -5,14 +5,21 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
 import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.SerialPort
+import edu.wpi.first.wpilibj.Timer
 import frc.team2186.robot.lib.interfaces.Subsystem
 import frc.team2186.robot.Config
 import frc.team2186.robot.Robot
 import frc.team2186.robot.common.RobotState
 import frc.team2186.robot.common.SynchronousPID
 import frc.team2186.robot.lib.math.Rotation2D
+import frc.team2186.robot.lib.odometry.FramesOfReference
+import frc.team2186.robot.lib.odometry.Kinematics
+import frc.team2186.robot.lib.pathfinding.Path
+import frc.team2186.robot.lib.pathfinding.PurePursuitController
 import frc.team2186.robot.plus
 import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.max
 
 object Drive : Subsystem() {
     private data class DriveData(val left: Double, val right: Double)
@@ -29,8 +36,10 @@ object Drive : Subsystem() {
     }
 
     private val gyro = AHRS(SerialPort.Port.kMXP)
-
     private val velocityHeadingPID = SynchronousPID(1.0, 0.0, 0.0)
+    private lateinit var ppController: PurePursuitController
+
+    private var followingPath = false
 
     val leftPosition: Double get() = ticksToInches(leftSide.getSelectedSensorPosition(0).toDouble())
     val rightPosition: Double get() = ticksToInches(rightSide.getSelectedSensorPosition(0).toDouble())
@@ -77,6 +86,19 @@ object Drive : Subsystem() {
         rightSide.stopMotor()
     }
 
+    fun followPath(path: Path, reversed: Boolean = false) {
+        ppController = PurePursuitController(
+                Config.PathFollowing.fixedLookahead,
+                Config.PathFollowing.maxAccel,
+                Config.PathFollowing.nominalDt,
+                path,
+                reversed,
+                Config.PathFollowing.completionTolerance
+        )
+
+        followingPath = true
+    }
+
     private fun updateVelocityHeading(): DriveData {
         val currentGyro = gyroAngle
         val lastHeadingError = Rotation2D.fromDegrees(gyroSetpoint).rotateBy(currentGyro.inverse()).degrees
@@ -84,6 +106,24 @@ object Drive : Subsystem() {
         val deltaV = velocityHeadingPID.calculate(lastHeadingError)
 
         return DriveData(leftSetpoint + deltaV / 2, rightSetpoint + deltaV / 2)
+    }
+
+    private fun updatePathFollower(): DriveData {
+        val currentPose = FramesOfReference.latestFieldToVehicle().value
+        val command = ppController.update(currentPose, Timer.getFPGATimestamp())
+
+        var setpoint = Kinematics.inverseKinematics(command)
+
+        var maxVel = 0.0
+        maxVel = max(maxVel, abs(setpoint.left))
+        maxVel = max(maxVel, abs(setpoint.right))
+
+        if (maxVel > Config.PathFollowing.maxVelocity) {
+            val scaling = Config.PathFollowing.maxVelocity / maxVel
+            setpoint = Kinematics.DriveVelocity(setpoint.left * scaling, setpoint.right * scaling)
+        }
+
+        return DriveData(setpoint.left, setpoint.right)
     }
 
     override fun update() {
@@ -99,7 +139,12 @@ object Drive : Subsystem() {
             }
 
             Robot.CurrentMode == RobotState.AUTONOMOUS -> {
-                val command = updateVelocityHeading()
+                var command: DriveData
+                if (followingPath) {
+                    command = updatePathFollower()
+                } else {
+                    command = updateVelocityHeading()
+                }
 
                 leftSide.set(ControlMode.Velocity, command.left)
                 rightSide.set(ControlMode.Velocity, command.right)
