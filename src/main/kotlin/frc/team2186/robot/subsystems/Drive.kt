@@ -12,6 +12,7 @@ import frc.team2186.robot.Robot
 import frc.team2186.robot.common.RobotState
 import frc.team2186.robot.common.SynchronousPID
 import frc.team2186.robot.lib.math.Rotation2D
+import frc.team2186.robot.lib.math.Translation2D
 import frc.team2186.robot.lib.odometry.FramesOfReference
 import frc.team2186.robot.lib.odometry.Kinematics
 import frc.team2186.robot.lib.pathfinding.Path
@@ -40,6 +41,7 @@ object Drive : Subsystem() {
     private lateinit var ppController: PurePursuitController
 
     private var followingPath = false
+    var useGyro = true
 
     val leftPosition: Double get() = ticksToInches(leftSide.getSelectedSensorPosition(0).toDouble())
     val rightPosition: Double get() = ticksToInches(rightSide.getSelectedSensorPosition(0).toDouble())
@@ -51,7 +53,7 @@ object Drive : Subsystem() {
 
     var leftSetpoint: Double = 0.0
     var rightSetpoint: Double = 0.0
-    var gyroSetpoint: Double = 0.0
+    var gyroSetpoint: Rotation2D = Rotation2D.fromDegrees(0.0)
 
     fun inchesPerSecondToRPM(ips: Double): Double = ips * 60 / (Config.Drive.wheelDiameter * PI)
     fun rpmToTicks(rpm: Double): Double = rpm * Config.Drive.ticksPerRevolution / (1 / 60 / 100)
@@ -101,7 +103,7 @@ object Drive : Subsystem() {
 
     private fun updateVelocityHeading(): DriveData {
         val currentGyro = gyroAngle
-        val lastHeadingError = Rotation2D.fromDegrees(gyroSetpoint).rotateBy(currentGyro.inverse()).degrees
+        val lastHeadingError = gyroSetpoint.rotateBy(currentGyro.inverse()).degrees
 
         val deltaV = velocityHeadingPID.calculate(lastHeadingError)
 
@@ -144,6 +146,10 @@ object Drive : Subsystem() {
                     command = updatePathFollower()
                 } else {
                     command = updateVelocityHeading()
+                }
+
+                if (useGyro.not()) {
+                    command = DriveData(leftSetpoint, rightSetpoint)
                 }
 
                 leftSide.set(ControlMode.Velocity, command.left)
