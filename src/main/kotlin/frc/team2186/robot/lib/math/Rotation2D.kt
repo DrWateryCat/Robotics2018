@@ -1,5 +1,6 @@
 package frc.team2186.robot.lib.math
 
+import com.google.gson.JsonObject
 import frc.team2186.robot.lib.interfaces.Interpolable
 import kotlin.math.abs
 
@@ -73,6 +74,13 @@ class Rotation2D : Interpolable<Rotation2D> {
         val deltaTheta = inverse().rotateBy(other).radians
         return this.rotateBy(Rotation2D.fromRadians(deltaTheta * x))
     }
+
+    val json get() = JsonObject().apply {
+            addProperty("degrees", degrees)
+            addProperty("radians", radians)
+            addProperty("sin", sin)
+            addProperty("cos", cos)
+        }
 
     companion object {
         protected val kIdentity = Rotation2D()

@@ -1,5 +1,5 @@
 plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.2.0"
+    id "org.jetbrains.kotlin.jvm" version "1.2.10"
     id "eclipse"
     id "idea"
     id "jaci.openrio.gradle.GradleRIO" version "2018.01.06b"
@@ -7,6 +7,8 @@ plugins {
 
 def TEAM = 2186
 def ROBOT_CLASS = "frc.team2186.robot.Robot"
+
+ext.kotlin_version = "1.2.10"
 
 deploy {
     targets {
@@ -25,6 +27,7 @@ deploy {
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -32,7 +35,9 @@ dependencies {
     compile ctre()
     compile navx()
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21"
+    compile 'com.google.code.gson:gson:2.8.2'
 }
 
 jar {
@@ -42,4 +47,10 @@ jar {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.2.1'
+}
+
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
 }

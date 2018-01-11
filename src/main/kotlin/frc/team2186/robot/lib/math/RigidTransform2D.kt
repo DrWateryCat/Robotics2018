@@ -1,5 +1,6 @@
 package frc.team2186.robot.lib.math
 
+import com.google.gson.JsonObject
 import frc.team2186.robot.lib.interfaces.Interpolable
 import kotlin.math.*
 
@@ -127,6 +128,11 @@ class RigidTransform2D : Interpolable<RigidTransform2D> {
     fun isColinear(other: RigidTransform2D): Boolean {
         val twist = log(inverse().transformBy(other))
         return (Utils.epsilonEquals(twist.dY, 0.0, kEpsilon) && Utils.epsilonEquals(twist.dTheta, 0.0, kEpsilon))
+    }
+
+    val json get() = JsonObject().apply {
+        add("translation", trans.json)
+        add("rotation", rot.json)
     }
 
     override fun interpolate(other: RigidTransform2D, x: Double): RigidTransform2D {

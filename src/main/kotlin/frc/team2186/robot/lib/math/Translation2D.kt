@@ -1,5 +1,6 @@
 package frc.team2186.robot.lib.math
 
+import com.google.gson.JsonObject
 import frc.team2186.robot.lib.interfaces.Interpolable
 import kotlin.math.acos
 import kotlin.math.max
@@ -51,6 +52,11 @@ class Translation2D : Interpolable<Translation2D> {
 
     fun extrapolate(other: Translation2D, x: Double): Translation2D = Translation2D(x * (other.x - this.x),
                                                                                     x * (other.y - y) + y)
+
+    val json get() = JsonObject().apply {
+        addProperty("x", x)
+        addProperty("y", y)
+    }
 
     companion object {
         protected val kIdentity = Translation2D()

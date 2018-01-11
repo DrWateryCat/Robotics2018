@@ -13,6 +13,7 @@ import frc.team2186.robot.common.ScaleState
 import frc.team2186.robot.common.SwitchState
 import frc.team2186.robot.lib.interfaces.AutonomousMode
 import frc.team2186.robot.lib.odometry.RobotPoseEstimator
+import frc.team2186.robot.subsystems.DashboardUpdater
 import frc.team2186.robot.subsystems.Drive
 
 class Robot : IterativeRobot() {
@@ -23,6 +24,7 @@ class Robot : IterativeRobot() {
     val rightJoystick = Joystick(Config.Controls.rightJoystickID)
     override fun robotInit() {
         Drive
+        DashboardUpdater
 
         Thread {
             RobotPoseEstimator.run()
@@ -33,18 +35,17 @@ class Robot : IterativeRobot() {
 
         SmartDashboard.putData("Autonomous Mode", autoChooser)
 
-        positionChooser.addDefault("Left", RobotPosition.LEFT)
-        positionChooser.addObject("Middle", RobotPosition.MIDDLE)
-        positionChooser.addObject("Right", RobotPosition.RIGHT)
+        positionChooser.apply {
+            addDefault("Left", RobotPosition.LEFT)
+            addObject("Middle", RobotPosition.MIDDLE)
+            addObject("Right", RobotPosition.RIGHT)
+        }
 
         SmartDashboard.putData("Robot Position", positionChooser)
-
-        val switchScaleSettings = DriverStation.getInstance().gameSpecificMessage
-        StartingSwitch = (if (switchScaleSettings[0] == 'L') SwitchState.LEFT else SwitchState.RIGHT)
-        StartingScale = (if (switchScaleSettings[1] == 'L') ScaleState.LEFT else ScaleState.RIGHT)
     }
 
     override fun autonomousInit() {
+        updateSwitchScale()
         autoChooser.selected.init()
 
         CurrentMode = RobotState.AUTONOMOUS
@@ -68,7 +69,27 @@ class Robot : IterativeRobot() {
     }
 
     override fun disabledPeriodic() {
+    }
+
+    fun updateSwitchScale() {
         StartingPosition = positionChooser.selected
+        val switchScaleSettings = DriverStation.getInstance().gameSpecificMessage
+        StartingSwitch = when {
+            switchScaleSettings[0] == 'L' -> SwitchState.LEFT
+            switchScaleSettings[0] == 'R' -> SwitchState.RIGHT
+            else -> {
+                println("HIT A BAD MODE! Switching current switch mode to left.")
+                SwitchState.LEFT
+            }
+        }
+        StartingScale = when {
+            switchScaleSettings[1] == 'L' -> ScaleState.LEFT
+            switchScaleSettings[1] == 'R' -> ScaleState.RIGHT
+            else -> {
+                println("HIT A BAD MODE! Switching current scale mode to left.")
+                ScaleState.LEFT
+            }
+        }
     }
 
     companion object {

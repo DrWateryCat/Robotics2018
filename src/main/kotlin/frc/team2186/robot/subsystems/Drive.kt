@@ -2,7 +2,9 @@ package frc.team2186.robot.subsystems
 
 import com.ctre.phoenix.motorcontrol.ControlMode
 import com.ctre.phoenix.motorcontrol.FeedbackDevice
+import com.ctre.phoenix.motorcontrol.SensorTerm
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
+import com.google.gson.JsonObject
 import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.SerialPort
 import edu.wpi.first.wpilibj.Timer
@@ -27,6 +29,7 @@ object Drive : Subsystem() {
 
     private val leftSide = WPI_TalonSRX(Config.Drive.leftMasterID).apply {
         configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0)
+
     } + WPI_TalonSRX(Config.Drive.leftSlaveID).apply {
     }
 
@@ -55,6 +58,14 @@ object Drive : Subsystem() {
     var rightSetpoint: Double = 0.0
     var gyroSetpoint: Rotation2D = Rotation2D.fromDegrees(0.0)
 
+    val json get() = JsonObject().apply {
+        addProperty("left_velocity", leftVelocity)
+        addProperty("right_velocity", rightVelocity)
+        addProperty("left_setpoint", leftSetpoint)
+        addProperty("right_setpoint", rightSetpoint)
+        addProperty("current_gyro", gyroAngle.degrees)
+    }
+
     fun inchesPerSecondToRPM(ips: Double): Double = ips * 60 / (Config.Drive.wheelDiameter * PI)
     fun rpmToTicks(rpm: Double): Double = rpm * Config.Drive.ticksPerRevolution / (1 / 60 / 100)
     fun inchesPerSecondToTicks(ips: Double): Double = rpmToTicks(inchesPerSecondToRPM(ips))
@@ -72,14 +83,16 @@ object Drive : Subsystem() {
     }
 
     fun inchesToTicks(inches: Double): Double {
-        return inches * Config.Drive.ticksPerRevolution / (Config.Drive.wheelDiameter * PI)
+        return (inches / (Config.Drive.wheelDiameter * PI)) * Config.Drive.ticksPerRevolution
     }
 
+    @Synchronized
     fun reset() {
         leftSide.setSelectedSensorPosition(0, 0, 0)
         rightSide.setSelectedSensorPosition(0, 0, 0)
     }
 
+    @Synchronized
     fun stop() {
         leftSetpoint = 0.0
         rightSetpoint = 0.0
@@ -88,6 +101,7 @@ object Drive : Subsystem() {
         rightSide.stopMotor()
     }
 
+    @Synchronized
     fun followPath(path: Path, reversed: Boolean = false) {
         ppController = PurePursuitController(
                 Config.PathFollowing.fixedLookahead,
