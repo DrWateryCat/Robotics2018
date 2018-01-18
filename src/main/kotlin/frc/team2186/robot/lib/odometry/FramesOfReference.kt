@@ -23,7 +23,10 @@ object FramesOfReference {
     }
 
     @Synchronized
-    fun fieldToVehicle(timestamp: Double): RigidTransform2D = fieldToVehicle.getInterpolated(InterpolatingDouble(timestamp))
+    fun fieldToVehicle(timestamp: Double): RigidTransform2D {
+        return fieldToVehicle.getInterpolated(InterpolatingDouble(timestamp)) ?: RigidTransform2D.identity
+    }
+
     @Synchronized
     fun latestFieldToVehicle(): Map.Entry<InterpolatingDouble, RigidTransform2D> = fieldToVehicle.lastEntry()
 
