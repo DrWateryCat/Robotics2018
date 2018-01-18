@@ -9,3 +9,14 @@ In order to deploy this code to the robot, follow these steps.
 3. Open a command prompt in the code directory.
 4. Type `gradlew deploy`
 5. If there are any errors, grab a mentor who knows programming.
+
+## Current Status
+* Drive subsystem implemented and ready to test
+* Odometry ready to test
+* PID ready to tune
+
+## Current Roadmap
+* Tune the drive PID
+* Finalize the design for the manipulator
+* Implement the manipulator
+* Investigate possible paths for autonomous
