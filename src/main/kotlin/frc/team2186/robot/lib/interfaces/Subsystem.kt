@@ -1,12 +1,14 @@
 package frc.team2186.robot.lib.interfaces
 
+import frc.team2186.robot.lib.common.thread
+
 abstract class Subsystem {
     init {
-        Thread {
-            while (Thread.interrupted().not()) {
+        thread {
+            while (Thread.currentThread().isInterrupted.not()) {
                 update()
             }
-        }.start()
+        }
     }
 
     abstract fun update()

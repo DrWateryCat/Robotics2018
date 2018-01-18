@@ -16,7 +16,9 @@ object DashboardUpdater : Subsystem() {
         }
         
         Drive.accessSync {
-            drive.putString("drive_json", Drive.json.asString)
+            drive.apply {
+                putString("drive_json", Drive.json.asString)
+            }
         }
 
         robotState.apply {

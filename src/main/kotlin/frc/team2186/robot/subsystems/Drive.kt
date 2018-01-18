@@ -2,7 +2,6 @@ package frc.team2186.robot.subsystems
 
 import com.ctre.phoenix.motorcontrol.ControlMode
 import com.ctre.phoenix.motorcontrol.FeedbackDevice
-import com.ctre.phoenix.motorcontrol.SensorTerm
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
 import com.google.gson.JsonObject
 import com.kauailabs.navx.frc.AHRS
@@ -14,12 +13,11 @@ import frc.team2186.robot.Robot
 import frc.team2186.robot.common.RobotState
 import frc.team2186.robot.common.SynchronousPID
 import frc.team2186.robot.lib.math.Rotation2D
-import frc.team2186.robot.lib.math.Translation2D
 import frc.team2186.robot.lib.odometry.FramesOfReference
 import frc.team2186.robot.lib.odometry.Kinematics
 import frc.team2186.robot.lib.pathfinding.Path
 import frc.team2186.robot.lib.pathfinding.PurePursuitController
-import frc.team2186.robot.plus
+import frc.team2186.robot.lib.common.plus
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.max
