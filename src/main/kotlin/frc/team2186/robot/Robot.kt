@@ -5,9 +5,7 @@ import edu.wpi.first.wpilibj.IterativeRobot
 import edu.wpi.first.wpilibj.Joystick
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
-import frc.team2186.robot.autonomous.DoNothing
-import frc.team2186.robot.autonomous.PIDTuning
-import frc.team2186.robot.autonomous.TestFollowPath
+import frc.team2186.robot.autonomous.*
 import frc.team2186.robot.common.RobotPosition
 import frc.team2186.robot.common.RobotState
 import frc.team2186.robot.common.ScaleState
@@ -34,6 +32,8 @@ class Robot : IterativeRobot() {
             addDefault("Do Nothing", DoNothing())
             addObject("Tune PID", PIDTuning())
             addObject("Following a path test", TestFollowPath())
+            addObject("Sequential actions test", TestActionRunner())
+            addObject("Baseline", Baseline())
         }
 
         SmartDashboard.putData("autonomous", autoChooser)
