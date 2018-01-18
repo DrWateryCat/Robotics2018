@@ -10,12 +10,7 @@ class PIDTuning : AutonomousMode() {
     }
 
     override fun update() {
-        if (deltaTime > 5.0) {
-            Drive.stop()
-        } else {
-            Drive.leftSetpoint = Drive.rpmToInchesPerSecond(60.0)
-            Drive.rightSetpoint = Drive.rpmToInchesPerSecond(60.0)
-            Drive.gyroSetpoint = Rotation2D.fromDegrees(0.0)
-        }
+        Drive.leftSetpoint = Drive.rpmToInchesPerSecond(60.0)
+        Drive.rightSetpoint = Drive.rpmToInchesPerSecond(60.0)
     }
 }

@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import frc.team2186.robot.autonomous.DoNothing
 import frc.team2186.robot.autonomous.PIDTuning
+import frc.team2186.robot.autonomous.TestFollowPath
 import frc.team2186.robot.common.RobotPosition
 import frc.team2186.robot.common.RobotState
 import frc.team2186.robot.common.ScaleState
@@ -15,6 +16,7 @@ import frc.team2186.robot.lib.interfaces.AutonomousMode
 import frc.team2186.robot.lib.odometry.RobotPoseEstimator
 import frc.team2186.robot.subsystems.DashboardUpdater
 import frc.team2186.robot.subsystems.Drive
+import frc.team2186.robot.subsystems.Manipulator
 
 class Robot : IterativeRobot() {
     val autoChooser = SendableChooser<AutonomousMode>()
@@ -25,15 +27,16 @@ class Robot : IterativeRobot() {
     override fun robotInit() {
         Drive
         DashboardUpdater
+        RobotPoseEstimator
+        Manipulator
 
-        Thread {
-            RobotPoseEstimator.run()
-        }.start()
+        autoChooser.apply {
+            addDefault("Do Nothing", DoNothing())
+            addObject("Tune PID", PIDTuning())
+            addObject("Following a path test", TestFollowPath())
+        }
 
-        autoChooser.addDefault("Do Nothing", DoNothing())
-        autoChooser.addObject("Tune PID", PIDTuning())
-
-        SmartDashboard.putData("Autonomous Mode", autoChooser)
+        SmartDashboard.putData("autonomous", autoChooser)
 
         positionChooser.apply {
             addDefault("Left", RobotPosition.LEFT)
@@ -60,8 +63,10 @@ class Robot : IterativeRobot() {
     }
 
     override fun teleopPeriodic() {
-        Drive.leftSetpoint = leftJoystick.getRawAxis(1)
-        Drive.rightSetpoint = rightJoystick.getRawAxis(1)
+        Drive.accessSync {
+            Drive.leftSetpoint = leftJoystick.getRawAxis(1)
+            Drive.rightSetpoint = rightJoystick.getRawAxis(1)
+        }
     }
 
     override fun disabledInit() {

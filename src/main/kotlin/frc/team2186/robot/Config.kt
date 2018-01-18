@@ -11,6 +11,25 @@ object Config {
         const val wheelDiameter: Double = 6.0
 
         const val ticksPerRevolution = 1440.0
+        const val ticksPer100ms = ticksPerRevolution / 600
+
+        const val kLeftP = 1.0
+        const val kLeftI = 0.0
+        const val kLeftD = 0.0
+        const val kLeftF = 0.05
+
+        const val kRightP = 1.0
+        const val kRightI = 0.0
+        const val kRightD = 0.0
+        const val kRightF = 0.05
+    }
+
+    object Manipulator {
+        const val motorID = 0
+        const val sensorID = 0
+        const val kP = 0.0
+        const val kI = 0.0
+        const val kD = 0.0
     }
 
     object PathFollowing {

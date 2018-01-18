@@ -10,12 +10,12 @@ class PathSegment(var start: Translation2D, var end: Translation2D, var speed: D
 
     class Sample(val translation: Translation2D, val speed: Double)
 
-    class ClosestPointReport {
-        var index: Double = 0.toDouble()
-        var clampedIndex: Double = 0.toDouble()
-        var closestPoint: Translation2D = Translation2D()
-        var distance: Double = 0.toDouble()
-    }
+    data class ClosestPointReport (
+        var index: Double = 0.0,
+        var clampedIndex: Double = 0.0,
+        var closestPoint: Translation2D = Translation2D(),
+        var distance: Double = 0.0
+        )
 
     init {
         updateStart(start)

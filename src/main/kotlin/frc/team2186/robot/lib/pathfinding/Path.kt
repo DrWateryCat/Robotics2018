@@ -4,7 +4,7 @@ import frc.team2186.robot.lib.math.Translation2D
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-class Path (var waypoints: ArrayList<Waypoint>, val name: String){
+class Path (var waypoints: ArrayList<Waypoint>){
     data class Waypoint(val position: Translation2D, val speed: Double, val marker: String?)
     val COMPLETE_PERCENTAGE = 0.99
     var markersCrossed = HashSet<String>()

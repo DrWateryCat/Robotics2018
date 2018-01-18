@@ -29,12 +29,19 @@ object Drive : Subsystem() {
 
     private val leftSide = WPI_TalonSRX(Config.Drive.leftMasterID).apply {
         configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0)
-
+        config_kP(0, Config.Drive.kLeftP, 0)
+        config_kI(0, Config.Drive.kLeftI, 0)
+        config_kD(0, Config.Drive.kLeftD, 0)
+        config_kF(0, Config.Drive.kLeftF, 0)
     } + WPI_TalonSRX(Config.Drive.leftSlaveID).apply {
     }
 
     private val rightSide = WPI_TalonSRX(Config.Drive.rightMasterID).apply {
         configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0)
+        config_kP(0, Config.Drive.kRightP, 0)
+        config_kI(0, Config.Drive.kRightI, 0)
+        config_kD(0, Config.Drive.kRightD, 0)
+        config_kF(0, Config.Drive.kRightF, 0)
         inverted = true
     } + WPI_TalonSRX(Config.Drive.rightSlaveID).apply {
     }
@@ -54,6 +61,8 @@ object Drive : Subsystem() {
 
     val gyroAngle: Rotation2D get() = Rotation2D.fromDegrees(gyro.yaw.toDouble())
 
+    val finishedPath get() = ppController.isDone
+
     var leftSetpoint: Double = 0.0
     var rightSetpoint: Double = 0.0
     var gyroSetpoint: Rotation2D = Rotation2D.fromDegrees(0.0)
@@ -67,11 +76,11 @@ object Drive : Subsystem() {
     }
 
     fun inchesPerSecondToRPM(ips: Double): Double = ips * 60 / (Config.Drive.wheelDiameter * PI)
-    fun rpmToTicks(rpm: Double): Double = rpm * Config.Drive.ticksPerRevolution / (1 / 60 / 100)
+    fun rpmToTicks(rpm: Double): Double = rpmToNative(rpm)
     fun inchesPerSecondToTicks(ips: Double): Double = rpmToTicks(inchesPerSecondToRPM(ips))
 
-    fun ticksToRPM(ticks: Double): Double = ticks * Config.Drive.ticksPerRevolution * (1 / 60 / 100)
-    fun rpmToInchesPerSecond(rpm: Double): Double = rpm * (Config.Drive.ticksPerRevolution * PI) / 60
+    fun ticksToRPM(ticks: Double): Double = nativeToRpm(ticks)
+    fun rpmToInchesPerSecond(rpm: Double): Double = rpm * (Config.Drive.wheelDiameter * PI) / 60
     fun ticksToInchesPerSecond(ticks: Double): Double = rpmToInchesPerSecond(ticksToRPM(ticks))
 
     init {
@@ -85,6 +94,9 @@ object Drive : Subsystem() {
     fun inchesToTicks(inches: Double): Double {
         return (inches / (Config.Drive.wheelDiameter * PI)) * Config.Drive.ticksPerRevolution
     }
+
+    fun rpmToNative(rpm: Double) = rpm * (Config.Drive.ticksPerRevolution / 600)
+    fun nativeToRpm(native: Double) = native / (Config.Drive.ticksPerRevolution / 600)
 
     @Synchronized
     fun reset() {
@@ -155,15 +167,16 @@ object Drive : Subsystem() {
             }
 
             Robot.CurrentMode == RobotState.AUTONOMOUS -> {
-                var command: DriveData
-                if (followingPath) {
-                    command = updatePathFollower()
-                } else {
-                    command = updateVelocityHeading()
-                }
-
-                if (useGyro.not()) {
-                    command = DriveData(leftSetpoint, rightSetpoint)
+                val command: DriveData = when {
+                    useGyro.not() -> {
+                        DriveData(leftSetpoint, rightSetpoint)
+                    }
+                    followingPath -> {
+                        updatePathFollower()
+                    }
+                    else -> {
+                        updateVelocityHeading()
+                    }
                 }
 
                 leftSide.set(ControlMode.Velocity, command.left)
