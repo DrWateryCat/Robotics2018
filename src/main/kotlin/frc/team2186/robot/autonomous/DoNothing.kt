@@ -8,4 +8,6 @@ class DoNothing : AutonomousMode() {
 
     override fun update() {
     }
+
+    override fun done() = false
 }

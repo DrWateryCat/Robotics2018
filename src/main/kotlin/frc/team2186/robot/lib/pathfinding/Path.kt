@@ -4,11 +4,12 @@ import frc.team2186.robot.lib.math.Translation2D
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-class Path (var waypoints: ArrayList<Waypoint>){
-    data class Waypoint(val position: Translation2D, val speed: Double, val marker: String?)
+class Path (vararg waypointList: Waypoint){
+    data class Waypoint(val position: Translation2D, val speed: Double, val marker: String = "")
     val COMPLETE_PERCENTAGE = 0.99
     var markersCrossed = HashSet<String>()
     var segments = ArrayList<PathSegment>()
+    var waypoints: ArrayList<Waypoint> = ArrayList(waypointList.toList())
     init {
         (0 until waypoints.size - 1).forEach({ i ->
             segments.add(PathSegment(
@@ -20,8 +21,8 @@ class Path (var waypoints: ArrayList<Waypoint>){
 
         if (waypoints.size > 0) {
             val first = waypoints[0]
-            if (first.marker.isNullOrEmpty().not()) {
-                markersCrossed.add(first.marker.orEmpty())
+            if (first.marker.isNotBlank().or(first.marker.isNotEmpty())) {
+                markersCrossed.add(first.marker)
             }
 
             waypoints.removeAt(0)
@@ -184,3 +185,5 @@ class Path (var waypoints: ArrayList<Waypoint>){
         }
     }
 }
+
+typealias Waypoint = Path.Waypoint

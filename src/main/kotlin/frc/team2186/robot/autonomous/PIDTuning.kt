@@ -13,4 +13,6 @@ class PIDTuning : AutonomousMode() {
         Drive.leftSetpoint = Drive.rpmToInchesPerSecond(60.0)
         Drive.rightSetpoint = Drive.rpmToInchesPerSecond(60.0)
     }
+
+    override fun done(): Boolean = false
 }
