@@ -3,6 +3,7 @@ package frc.team2186.robot.subsystems
 import com.ctre.phoenix.motorcontrol.ControlMode
 import com.ctre.phoenix.motorcontrol.FeedbackDevice
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX
 import com.google.gson.JsonObject
 import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.SerialPort
@@ -31,7 +32,7 @@ object Drive : Subsystem() {
         config_kI(0, Config.Drive.kLeftI, 0)
         config_kD(0, Config.Drive.kLeftD, 0)
         config_kF(0, Config.Drive.kLeftF, 0)
-    } + WPI_TalonSRX(Config.Drive.leftSlaveID).apply {
+    } + WPI_VictorSPX(Config.Drive.leftSlaveID).apply {
     }
 
     private val rightSide = WPI_TalonSRX(Config.Drive.rightMasterID).apply {
@@ -41,7 +42,7 @@ object Drive : Subsystem() {
         config_kD(0, Config.Drive.kRightD, 0)
         config_kF(0, Config.Drive.kRightF, 0)
         inverted = true
-    } + WPI_TalonSRX(Config.Drive.rightSlaveID).apply {
+    } + WPI_VictorSPX(Config.Drive.rightSlaveID).apply {
     }
 
     private val gyro = AHRS(SerialPort.Port.kMXP)

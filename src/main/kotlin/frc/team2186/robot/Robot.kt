@@ -12,9 +12,7 @@ import frc.team2186.robot.common.ScaleState
 import frc.team2186.robot.common.SwitchState
 import frc.team2186.robot.lib.interfaces.AutonomousMode
 import frc.team2186.robot.lib.odometry.RobotPoseEstimator
-import frc.team2186.robot.subsystems.DashboardUpdater
-import frc.team2186.robot.subsystems.Drive
-import frc.team2186.robot.subsystems.Manipulator
+import frc.team2186.robot.subsystems.*
 
 class Robot : IterativeRobot() {
     val autoChooser = SendableChooser<AutonomousMode>()
@@ -26,7 +24,10 @@ class Robot : IterativeRobot() {
         Drive
         DashboardUpdater
         RobotPoseEstimator
-        Manipulator
+        Grabber
+        Lifter
+        Camera
+        //Manipulator
 
         autoChooser.apply {
             addDefault("Do Nothing", DoNothing())

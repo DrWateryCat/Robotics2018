@@ -8,6 +8,7 @@ import frc.team2186.robot.lib.odometry.FramesOfReference
 object DashboardUpdater : Subsystem() {
     val odometry = EasyNetworkTable("/odometry")
     val drive = EasyNetworkTable("/drive")
+    val lifter = EasyNetworkTable("/lifter")
     val robotState = EasyNetworkTable("/robot_state")
 
     override fun update() {
@@ -18,6 +19,12 @@ object DashboardUpdater : Subsystem() {
         Drive.accessSync {
             drive.apply {
                 putString("drive_json", Drive.json.asString)
+            }
+        }
+
+        Lifter.accessSync {
+            lifter.apply {
+                putString("lifter_json", Lifter.json.asString)
             }
         }
 

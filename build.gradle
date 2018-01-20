@@ -1,5 +1,5 @@
 plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.2.10"
+    id "org.jetbrains.kotlin.jvm" version "1.2.20"
     id "eclipse"
     id "idea"
     id "jaci.openrio.gradle.GradleRIO" version "2018.01.06b"
@@ -8,7 +8,7 @@ plugins {
 def TEAM = 2186
 def ROBOT_CLASS = "frc.team2186.robot.Robot"
 
-ext.kotlin_version = "1.2.10"
+ext.kotlin_version = "1.2.20"
 
 deploy {
     targets {

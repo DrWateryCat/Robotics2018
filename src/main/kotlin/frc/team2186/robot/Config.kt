@@ -32,6 +32,14 @@ object Config {
         const val kD = 0.0
     }
 
+    object Lifter {
+        const val motorID = 0
+        const val sensorID = 0
+        const val kP = 1.0
+        const val kI = 0.0
+        const val kD = 0.0
+    }
+
     object PathFollowing {
         const val fixedLookahead = 24.0
         const val maxAccel = 100.0
@@ -43,5 +51,10 @@ object Config {
     object Controls {
         const val leftJoystickID = 0
         const val rightJoystickID = 1
+    }
+
+    object Camera {
+        const val cameraID = 0
+        const val cameraPort = 5801
     }
 }
