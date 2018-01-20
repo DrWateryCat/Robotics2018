@@ -66,7 +66,7 @@ object Drive : Subsystem() {
     var rightSetpoint: Double = 0.0
     var gyroSetpoint: Rotation2D = Rotation2D.fromDegrees(0.0)
 
-    val json get() = JsonObject().apply {
+    override val json get() = JsonObject().apply {
         addProperty("left_velocity", leftVelocity)
         addProperty("right_velocity", rightVelocity)
         addProperty("left_setpoint", leftSetpoint)

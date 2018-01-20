@@ -1,9 +1,11 @@
 package frc.team2186.robot.subsystems
 
+import com.google.gson.JsonObject
 import frc.team2186.robot.Robot
 import frc.team2186.robot.lib.interfaces.Subsystem
 import frc.team2186.robot.lib.networking.EasyNetworkTable
 import frc.team2186.robot.lib.odometry.FramesOfReference
+import frc.team2186.robot.lib.odometry.RobotPoseEstimator
 
 object DashboardUpdater : Subsystem() {
     val odometry = EasyNetworkTable("/odometry")
@@ -11,22 +13,22 @@ object DashboardUpdater : Subsystem() {
     val lifter = EasyNetworkTable("/lifter")
     val robotState = EasyNetworkTable("/robot_state")
 
-    override fun update() {
-        odometry.apply {
-            putString("pose_json", FramesOfReference.latestFieldToVehicle().value.json.asString)
-        }
-        
-        Drive.accessSync {
-            drive.apply {
-                putString("drive_json", Drive.json.asString)
-            }
+    override val json: JsonObject
+        get() = JsonObject().apply {
         }
 
-        Lifter.accessSync {
-            lifter.apply {
-                putString("lifter_json", Lifter.json.asString)
+    fun updateNetworkTable(subsystem: Subsystem, networkTable: EasyNetworkTable) {
+        subsystem.accessSync {
+            this.json.entrySet().forEach {
+                networkTable.putString(it.key, it.value.asString)
             }
         }
+    }
+
+    override fun update() {
+        updateNetworkTable(RobotPoseEstimator, odometry)
+        updateNetworkTable(Drive, drive)
+        updateNetworkTable(Lifter, lifter)
 
         robotState.apply {
             putString("selected_position", Robot.CurrentMode.name)

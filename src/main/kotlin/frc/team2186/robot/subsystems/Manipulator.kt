@@ -1,5 +1,6 @@
 package frc.team2186.robot.subsystems
 
+import com.google.gson.JsonObject
 import edu.wpi.first.wpilibj.*
 import edu.wpi.first.wpilibj.interfaces.Potentiometer
 import frc.team2186.robot.Config
@@ -16,6 +17,10 @@ object Manipulator : Subsystem(), PIDOutput {
     }
 
     val currentPosition: Double = sensor.get() / 2880.0
+
+    override val json: JsonObject
+        get() = JsonObject().apply {
+        }
 
     private var motorVal = 0.0
 

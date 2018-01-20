@@ -1,5 +1,6 @@
 package frc.team2186.robot.lib.interfaces
 
+import com.google.gson.JsonObject
 import frc.team2186.robot.lib.common.thread
 
 abstract class Subsystem {
@@ -10,6 +11,8 @@ abstract class Subsystem {
             }
         }
     }
+
+    abstract val json: JsonObject
 
     abstract fun update()
 

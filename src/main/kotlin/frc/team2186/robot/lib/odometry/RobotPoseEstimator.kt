@@ -1,5 +1,6 @@
 package frc.team2186.robot.lib.odometry
 
+import com.google.gson.JsonObject
 import edu.wpi.first.wpilibj.Timer
 import frc.team2186.robot.lib.interfaces.Subsystem
 import frc.team2186.robot.subsystems.Drive
@@ -8,6 +9,13 @@ import java.util.logging.Logger
 object RobotPoseEstimator : Subsystem() {
     var leftEncoderPrev = 0.0
     var rightEncoderPrev = 0.0
+
+    override val json: JsonObject
+        get() = JsonObject().apply {
+            FramesOfReference.latestFieldToVehicle().value.json.entrySet().forEach {
+                addProperty(it.key, it.value.asString)
+            }
+        }
 
     override fun update() {
         Drive.accessSync {

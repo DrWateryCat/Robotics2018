@@ -23,7 +23,7 @@ object Lifter : Subsystem() {
     private var motorSetpoint = 0.0
 
     val done get() = pidController.onTarget()
-    val json get() = JsonObject().apply {
+    override val json get() = JsonObject().apply {
         addProperty("sensor_angle", sensor.get() * 360)
         addProperty("pid_setpoint", pidController.setpoint)
         addProperty("motor_setpoint", motorSetpoint)
