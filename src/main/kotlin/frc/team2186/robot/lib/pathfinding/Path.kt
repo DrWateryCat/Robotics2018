@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_EXPRESSION")
+
 package frc.team2186.robot.lib.pathfinding
 
 import frc.team2186.robot.lib.math.Translation2D

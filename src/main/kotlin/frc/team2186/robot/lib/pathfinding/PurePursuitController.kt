@@ -18,7 +18,7 @@ class PurePursuitController (
 ) {
     data class Circle(val center: Translation2D, val radius: Double, val turnRight: Boolean)
 
-    private lateinit var lastCommand: RigidTransform2D.Delta
+    private var lastCommand: RigidTransform2D.Delta? = null
     var lastTime: Double = 0.0
     var deltaTime: Double = nominalDt
 
@@ -53,11 +53,11 @@ class PurePursuitController (
             deltaTime = deltaT
         }
 
-        val accel = (speed - lastCommand.deltaX) / deltaT
+        val accel = (speed - lastCommand!!.deltaX) / deltaT
         if (accel < -maxAccel) {
-            speed = lastCommand.deltaX - maxAccel * deltaT
+            speed = lastCommand!!.deltaX - maxAccel * deltaT
         } else if (accel > maxAccel) {
-            speed = lastCommand.deltaX + maxAccel * deltaT
+            speed = lastCommand!!.deltaX + maxAccel * deltaT
         }
 
         val remainingDistance = path.remainingDistance()

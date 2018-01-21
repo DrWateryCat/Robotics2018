@@ -28,7 +28,7 @@ object Kinematics {
                           leftWheelDelta: Double,
                           rightWheelDelta: Double,
                           currentHeading: Rotation2D): RigidTransform2D {
-        val withGyro = forwardKinematics(leftWheelDelta, rightWheelDelta, currentPose.rot.inverse().radians)
+        val withGyro = forwardKinematics(leftWheelDelta, rightWheelDelta, currentPose.rot.inverse().rotateBy(currentHeading).radians)
         return currentPose.transformBy(RigidTransform2D.fromVelocity(withGyro))
     }
 
