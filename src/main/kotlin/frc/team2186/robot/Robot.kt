@@ -34,7 +34,7 @@ class Robot : IterativeRobot() {
             addObject("Tune PID", PIDTuning())
             addObject("Following a path test", TestFollowPath())
             addObject("Sequential actions test", TestActionRunner())
-            addObject("Baseline", Baseline())
+            addObject("Baseline", SimpleBaseline())
         }
 
         SmartDashboard.putData("autonomous", autoChooser)

@@ -1,13 +1,12 @@
 package frc.team2186.robot.autonomous
 
-import frc.team2186.robot.lib.interfaces.AutonomousMode
+import frc.team2186.robot.lib.common.actionRunner
+import frc.team2186.robot.lib.interfaces.SequentialAutonomousMode
 
-class DoNothing : AutonomousMode() {
-    override fun init() {
+class DoNothing : SequentialAutonomousMode() {
+    override val actions = actionRunner {
+        action {
+            true
+        }
     }
-
-    override fun update() {
-    }
-
-    override fun done() = false
 }

@@ -104,6 +104,28 @@ object Drive : Subsystem() {
     }
 
     @Synchronized
+    fun setLeft(value: Double) {
+        leftSetpoint = value
+    }
+
+    @Synchronized
+    fun setRight(value: Double) {
+        rightSetpoint = value
+    }
+
+    @Synchronized
+    fun setForwardVelocity(ips: Double) {
+        leftSetpoint = ips
+        rightSetpoint = ips
+    }
+
+    @Synchronized
+    fun setForwardRPM(rpm: Double) {
+        leftSetpoint = rpmToInchesPerSecond(rpm)
+        rightSetpoint = rpmToInchesPerSecond(rpm)
+    }
+
+    @Synchronized
     fun stop() {
         leftSetpoint = 0.0
         rightSetpoint = 0.0
