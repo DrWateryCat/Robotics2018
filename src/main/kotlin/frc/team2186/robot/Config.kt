@@ -7,9 +7,10 @@ object Config {
         const val rightMasterID = 2
         const val rightSlaveID = 3
 
-        const val trackScrubFactor: Double = 0.5
-        const val effectiveWheelDiameter = 6.0
         const val wheelDiameter: Double = 6.0
+        const val wheelBaseLength = 23.5
+        const val trackScrubFactor: Double = 0.5
+        const val effectiveWheelDiameter = (wheelDiameter * wheelDiameter + wheelBaseLength * wheelBaseLength) / wheelBaseLength
 
         const val ticksPerRevolution = 1440.0
         const val ticksPer100ms = ticksPerRevolution / 600
