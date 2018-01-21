@@ -13,6 +13,7 @@ class TestFollowPath : AutonomousMode() {
                 Waypoint(Translation2D(2.5 * 12, 5.0 * 12), 40.0, "Middle"),
                 Waypoint(Translation2D(5.0 * 12, 10.0 * 12), 0.0, "End")
         )
+        path.create()
         Drive.followPath(path)
     }
 

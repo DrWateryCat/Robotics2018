@@ -5,12 +5,13 @@ import kotlin.math.abs
 import kotlin.math.sqrt
 
 class Path (vararg waypointList: Waypoint){
-    data class Waypoint(val position: Translation2D, val speed: Double, val marker: String = "")
+    data class Waypoint(var position: Translation2D, var speed: Double, var marker: String = "")
     val COMPLETE_PERCENTAGE = 0.99
     var markersCrossed = HashSet<String>()
     var segments = ArrayList<PathSegment>()
     var waypoints: ArrayList<Waypoint> = ArrayList(waypointList.toList())
-    init {
+
+    fun create() {
         (0 until waypoints.size - 1).forEach({ i ->
             segments.add(PathSegment(
                     waypoints[i].position,
@@ -28,6 +29,9 @@ class Path (vararg waypointList: Waypoint){
             waypoints.removeAt(0)
         }
     }
+
+    fun waypoint(block: Waypoint.() -> Unit) = waypoints.add(Waypoint(Translation2D(0.0, 0.0), 0.0).apply(block))
+    fun translation(x: Double, y: Double): Translation2D = Translation2D(x, y)
 
     fun update(pos: Translation2D): Double {
         var ret = 0.0
@@ -187,3 +191,8 @@ class Path (vararg waypointList: Waypoint){
 }
 
 typealias Waypoint = Path.Waypoint
+
+fun path(block: Path.() -> Unit): Path = Path().apply {
+    block
+    create()
+}

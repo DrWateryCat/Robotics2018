@@ -1,6 +1,6 @@
 package frc.team2186.robot.lib.common
 
-class IterativeAutoAction(private val block: () -> Boolean) {
+class IterativeAutoAction(val block: () -> Boolean) {
     var done = false
 
     fun run() {
@@ -27,3 +27,33 @@ class SequentialActionRunner(vararg action: IterativeAutoAction) {
         }
     }
 }
+
+class ActionRunner {
+    private val actions = ArrayList<IterativeAutoAction>()
+    private val actionCompletedCallbacks = ArrayList<() -> Unit>()
+    private lateinit var initBlock: () -> Unit
+    val done get() = (actions.size > 0).not()
+
+    fun action(block: () -> Boolean) = actions.add(IterativeAutoAction(block))
+    fun actionComplete(block: () -> Unit) = actionCompletedCallbacks.add(block)
+    fun init(block: () -> Unit) {initBlock = block}
+
+    fun init() {
+        this.initBlock()
+    }
+
+    fun update() {
+        if (actions[0].done.and(done.not())) {
+            if (actions.size > 0) {
+                actions.removeAt(0)
+                actionCompletedCallbacks.forEach { cb ->
+                    cb()
+                }
+            }
+        } else {
+            actions[0].run()
+        }
+    }
+}
+
+fun actionRunner(block: ActionRunner.() -> Unit): ActionRunner = ActionRunner().apply(block)

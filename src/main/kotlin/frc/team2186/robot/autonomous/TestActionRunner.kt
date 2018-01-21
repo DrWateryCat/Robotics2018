@@ -1,34 +1,28 @@
 package frc.team2186.robot.autonomous
 
-import frc.team2186.robot.lib.common.IterativeAutoAction
-import frc.team2186.robot.lib.common.SequentialActionRunner
+import frc.team2186.robot.lib.common.actionRunner
 import frc.team2186.robot.lib.interfaces.AutonomousMode
 import frc.team2186.robot.subsystems.Drive
 import frc.team2186.robot.subsystems.Lifter
-import frc.team2186.robot.subsystems.Manipulator
 
 class TestActionRunner : AutonomousMode() {
-    val runner = SequentialActionRunner(
-            IterativeAutoAction {
-                Drive.accessSync {
-                    Drive.leftSetpoint = Drive.rpmToInchesPerSecond(60.0)
-                    Drive.rightSetpoint = Drive.rpmToInchesPerSecond(60.0)
-                }
-                Lifter.accessSync {
-                    Lifter.set(0.5)
-                }
+    val runner = actionRunner {
+        init {
+            Drive.reset()
+        }
+        action {
+            Drive.leftSetpoint = Drive.rpmToInchesPerSecond(60.0)
+            Drive.rightSetpoint = Drive.rpmToInchesPerSecond(60.0)
 
-                Drive.leftPosition >= 60.0 && Drive.rightPosition >= 60.0 && Lifter.done
-            },
-            IterativeAutoAction {
-                Lifter.accessSync {
-                    Lifter.set(0.0)
-                }
-                Lifter.done
-            }
-    )
+            Drive.leftPosition >= 60.0 && Drive.rightPosition >= 60.0
+        }
+        actionComplete {
+            Drive.reset()
+        }
+    }
     override fun init() {
         Lifter.usePID = true
+        runner.init()
     }
 
     override fun update() = runner.update()

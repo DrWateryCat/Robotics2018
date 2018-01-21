@@ -11,7 +11,7 @@ import frc.team2186.robot.common.RobotState
 import frc.team2186.robot.common.ScaleState
 import frc.team2186.robot.common.SwitchState
 import frc.team2186.robot.lib.interfaces.AutonomousMode
-import frc.team2186.robot.lib.odometry.RobotPoseEstimator
+import frc.team2186.robot.subsystems.RobotPoseEstimator
 import frc.team2186.robot.subsystems.*
 
 class Robot : IterativeRobot() {

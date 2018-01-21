@@ -4,8 +4,6 @@ import com.google.gson.JsonObject
 import frc.team2186.robot.Robot
 import frc.team2186.robot.lib.interfaces.Subsystem
 import frc.team2186.robot.lib.networking.EasyNetworkTable
-import frc.team2186.robot.lib.odometry.FramesOfReference
-import frc.team2186.robot.lib.odometry.RobotPoseEstimator
 
 object DashboardUpdater : Subsystem() {
     val odometry = EasyNetworkTable("/odometry")
