@@ -2,7 +2,7 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.2.20"
     id "eclipse"
     id "idea"
-    id "jaci.openrio.gradle.GradleRIO" version "2018.01.06b"
+    id "jaci.openrio.gradle.GradleRIO" version "2018.01.21"
 }
 
 def TEAM = 2186
@@ -47,7 +47,7 @@ jar {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.2.1'
+    gradleVersion = '4.4'
 }
 
 kotlin {
