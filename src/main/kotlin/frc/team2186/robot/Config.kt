@@ -8,6 +8,7 @@ object Config {
         const val rightSlaveID = 3
 
         const val trackScrubFactor: Double = 0.5
+        const val effectiveWheelDiameter = 6.0
         const val wheelDiameter: Double = 6.0
 
         const val ticksPerRevolution = 1440.0

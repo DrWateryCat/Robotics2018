@@ -9,7 +9,7 @@ object Kinematics {
     fun forwardKinematics(leftWheelDelta: Double, rightWheelDelta: Double): RigidTransform2D.Delta {
         val linearVel = (leftWheelDelta + rightWheelDelta) / 2
         val deltaV = (rightWheelDelta - leftWheelDelta) / 2
-        val deltaTheta = deltaV * 2 * Config.Drive.trackScrubFactor / Config.Drive.trackScrubFactor
+        val deltaTheta = deltaV * 2 * Config.Drive.trackScrubFactor / Config.Drive.effectiveWheelDiameter
 
         return RigidTransform2D.Delta(
                 linearVel,
