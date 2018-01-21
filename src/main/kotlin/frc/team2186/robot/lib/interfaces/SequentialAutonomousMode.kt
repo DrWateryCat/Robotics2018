@@ -2,7 +2,7 @@ package frc.team2186.robot.lib.interfaces
 
 import frc.team2186.robot.lib.common.ActionRunner
 
-abstract class SequentialAutonomousMode : AutonomousMode() {
+abstract class SequentialAutonomousMode(name: String, default: Boolean = false) : AutonomousMode(name, default) {
     abstract val actions: ActionRunner
 
     override fun init() {

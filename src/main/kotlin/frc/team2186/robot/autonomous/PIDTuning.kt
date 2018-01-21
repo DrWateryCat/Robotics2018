@@ -4,7 +4,7 @@ import frc.team2186.robot.lib.interfaces.AutonomousMode
 import frc.team2186.robot.lib.math.Rotation2D
 import frc.team2186.robot.subsystems.Drive
 
-class PIDTuning : AutonomousMode() {
+class PIDTuning : AutonomousMode("PID Tuning") {
     override fun init() {
         Drive.useGyro = false
     }

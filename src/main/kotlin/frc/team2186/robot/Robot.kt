@@ -10,6 +10,7 @@ import frc.team2186.robot.common.RobotPosition
 import frc.team2186.robot.common.RobotState
 import frc.team2186.robot.common.ScaleState
 import frc.team2186.robot.common.SwitchState
+import frc.team2186.robot.lib.common.AutonomousManager
 import frc.team2186.robot.lib.interfaces.AutonomousMode
 import frc.team2186.robot.subsystems.RobotPoseEstimator
 import frc.team2186.robot.subsystems.*
@@ -30,11 +31,7 @@ class Robot : IterativeRobot() {
         //Manipulator
 
         autoChooser.apply {
-            addDefault("Do Nothing", DoNothing())
-            addObject("Tune PID", PIDTuning())
-            addObject("Following a path test", TestFollowPath())
-            addObject("Sequential actions test", TestActionRunner())
-            addObject("Baseline", SimpleBaseline())
+            AutonomousManager.sendableChooser()
         }
 
         SmartDashboard.putData("autonomous", autoChooser)

@@ -7,7 +7,7 @@ import frc.team2186.robot.lib.interfaces.SequentialAutonomousMode
 import frc.team2186.robot.subsystems.Drive
 import frc.team2186.robot.subsystems.Lifter
 
-class TestActionRunner : SequentialAutonomousMode() {
+class TestActionRunner : SequentialAutonomousMode("Action Runner Test") {
     override val actions: ActionRunner = actionRunner {
         init {
             Drive.reset()

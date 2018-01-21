@@ -10,7 +10,7 @@ import frc.team2186.robot.lib.pathfinding.Path
 import frc.team2186.robot.lib.pathfinding.Waypoint
 import frc.team2186.robot.subsystems.Drive
 
-class Baseline : AutonomousMode() {
+class Baseline : AutonomousMode("Baseline") {
     val runner = SequentialActionRunner(
             IterativeAutoAction {
                 Drive.followPath(when(Robot.StartingPosition) {

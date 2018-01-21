@@ -12,8 +12,12 @@ class Path (vararg waypointList: Waypoint){
     var markersCrossed = HashSet<String>()
     var segments = ArrayList<PathSegment>()
     var waypoints: ArrayList<Waypoint> = ArrayList(waypointList.toList())
+    init {
+        create()
+    }
 
     fun create() {
+        segments.removeAll(segments)
         (0 until waypoints.size - 1).forEach({ i ->
             segments.add(PathSegment(
                     waypoints[i].position,

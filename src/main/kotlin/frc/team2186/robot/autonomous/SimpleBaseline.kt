@@ -4,7 +4,7 @@ import frc.team2186.robot.lib.common.actionRunner
 import frc.team2186.robot.lib.interfaces.SequentialAutonomousMode
 import frc.team2186.robot.subsystems.Drive
 
-class SimpleBaseline : SequentialAutonomousMode() {
+class SimpleBaseline : SequentialAutonomousMode("Simple Baseline") {
     override val actions = actionRunner {
         action {
             Drive.setForwardVelocity(24.0) //2 feet per second

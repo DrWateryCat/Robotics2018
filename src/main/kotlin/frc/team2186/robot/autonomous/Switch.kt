@@ -2,12 +2,16 @@ package frc.team2186.robot.autonomous
 
 import frc.team2186.robot.Robot
 import frc.team2186.robot.common.RobotPosition
+import frc.team2186.robot.lib.common.ActionRunner
 import frc.team2186.robot.lib.common.actionRunner
 import frc.team2186.robot.lib.interfaces.AutonomousMode
+import frc.team2186.robot.lib.interfaces.SequentialAutonomousMode
 import frc.team2186.robot.lib.pathfinding.path
 import frc.team2186.robot.subsystems.Drive
+import frc.team2186.robot.subsystems.Grabber
+import frc.team2186.robot.subsystems.Lifter
 
-class Switch : AutonomousMode() {
+class Switch : SequentialAutonomousMode("Switch") {
     val p = path {
         waypoint {
             position = translation(0.0, 0.0)
@@ -26,23 +30,13 @@ class Switch : AutonomousMode() {
         }
     }
 
-    val actions = actionRunner {
+    override val actions = actionRunner {
         init {
             Drive.followPath(p)
         }
         action {
-            Drive.finishedPath
+            Lifter.set(0.25)
+            Drive.finishedPath && Lifter.done
         }
-    }
-    override fun init() {
-        actions.init()
-    }
-
-    override fun update() {
-        actions.update()
-    }
-
-    override fun done(): Boolean {
-        return true
     }
 }

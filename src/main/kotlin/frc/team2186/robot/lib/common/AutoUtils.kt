@@ -1,5 +1,8 @@
 package frc.team2186.robot.lib.common
 
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
+import frc.team2186.robot.lib.interfaces.AutonomousMode
+
 class IterativeAutoAction(val block: () -> Boolean) {
     var done = false
 
@@ -52,6 +55,26 @@ class ActionRunner {
             }
         } else {
             actions[0].run()
+        }
+    }
+}
+
+object AutonomousManager {
+    private val modes = ArrayList<AutonomousMode>()
+
+    fun addMode(mode: AutonomousMode) {
+        modes.add(mode)
+    }
+
+    fun sendableChooser(): SendableChooser<AutonomousMode> {
+        return SendableChooser<AutonomousMode>().apply {
+            modes.forEach {
+                if (it.default) {
+                    addDefault(it.name, it)
+                } else {
+                    addObject(it.name, it)
+                }
+            }
         }
     }
 }
