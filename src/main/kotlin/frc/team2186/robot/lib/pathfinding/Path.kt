@@ -2,6 +2,7 @@
 
 package frc.team2186.robot.lib.pathfinding
 
+import frc.team2186.robot.lib.common.isBlankOrEmpty
 import frc.team2186.robot.lib.math.Translation2D
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -55,8 +56,8 @@ class Path (vararg waypointList: Waypoint){
                     //If there are more waypoints remove the first one, since we're there.
                     val waypoint = waypoints[0]
 
-                    if (waypoint.marker.isNullOrEmpty().not()) {
-                        markersCrossed.add(waypoint.marker.orEmpty())
+                    if (waypoint.marker.isBlankOrEmpty().not()) {
+                        markersCrossed.add(waypoint.marker)
                     }
 
                     waypoints.removeAt(0)
@@ -86,8 +87,8 @@ class Path (vararg waypointList: Waypoint){
                         if (waypoints.size > 0) {
                             val waypoint = waypoints[0]
 
-                            if (waypoint.marker.isNullOrEmpty().not()) {
-                                markersCrossed.add(waypoint.marker.orEmpty())
+                            if (waypoint.marker.isBlankOrEmpty().not()) {
+                                markersCrossed.add(waypoint.marker)
                             }
 
                             waypoints.removeAt(0)
@@ -119,7 +120,7 @@ class Path (vararg waypointList: Waypoint){
             return PathSegment.Sample(segments[0].start, segments[0].speed)
         }
 
-        for (seg in segments) {
+        segments.forEach { seg ->
             val dist = posInverse.translateBy(seg.end).norm()
 
             if (dist >= lookaheadDist) {
@@ -133,16 +134,16 @@ class Path (vararg waypointList: Waypoint){
             }
         }
 
-        val lastSegment = segments[segments.size - 1]
+        val lastSegment = segments.lastOrNull()!!
         val newLastSegment = PathSegment(lastSegment.start, lastSegment.interpolate(10000.0), lastSegment.speed)
 
         val intersectionPoint = getFirstCircleSegmentIntersection(newLastSegment, pos, lastSegment.speed)
 
-        when {
-            intersectionPoint != null -> return PathSegment.Sample(intersectionPoint, lastSegment.speed)
+        return when {
+            intersectionPoint != null -> PathSegment.Sample(intersectionPoint, lastSegment.speed)
             else -> {
                 println("ERROR: No intersection point anywhere?")
-                return PathSegment.Sample(lastSegment.end, lastSegment.speed)
+                PathSegment.Sample(lastSegment.end, lastSegment.speed)
             }
         }
     }

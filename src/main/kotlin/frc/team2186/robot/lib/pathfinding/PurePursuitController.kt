@@ -125,7 +125,7 @@ class PurePursuitController (
                             (-my * (-y1 * y1 + y2 * y2 + deltaX * deltaX) + 2 * mx * y1 * deltaX) / (2 * crossTerm)
                     ),
                     0.5 * abs((deltaX * deltaX + deltaY * deltaY) / crossTerm),
-                    turnRight = crossProduct > 0
+                    crossProduct > 0
             )
         }
     }

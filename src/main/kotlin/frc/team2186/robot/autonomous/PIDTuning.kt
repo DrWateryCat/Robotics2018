@@ -10,8 +10,7 @@ class PIDTuning : AutonomousMode("PID Tuning") {
     }
 
     override fun update() {
-        Drive.leftSetpoint = Drive.rpmToInchesPerSecond(60.0)
-        Drive.rightSetpoint = Drive.rpmToInchesPerSecond(60.0)
+        Drive.setForwardRPM(60.0)
     }
 
     override fun done(): Boolean = false
