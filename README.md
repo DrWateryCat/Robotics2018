@@ -15,6 +15,7 @@ In order to deploy this code to the robot, follow these steps.
 * Drive subsystem implemented and ready to test
 * Odometry ready to test
 * PID ready to tune
+* LEDs ready to go
 
 ## Current Roadmap
 * Tune the drive PID
