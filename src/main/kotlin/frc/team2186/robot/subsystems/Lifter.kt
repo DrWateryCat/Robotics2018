@@ -22,14 +22,22 @@ object Lifter : Subsystem() {
 
     private var motorSetpoint = 0.0
 
-    val done get() = pidController.onTarget()
-    override val json get() = JsonObject().apply {
+    val done
+        @Synchronized
+        get() = pidController.onTarget()
+    override val json
+        @Synchronized
+        get() = JsonObject().apply {
         addProperty("sensor_angle", sensor.get() * 360)
         addProperty("pid_setpoint", pidController.setpoint)
         addProperty("motor_setpoint", motorSetpoint)
         addProperty("using_pid", usePID)
     }
     var usePID = true
+        @Synchronized
+        set(value) {
+            field = value
+        }
 
     @Synchronized
     fun set(input: Double) {

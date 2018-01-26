@@ -51,20 +51,48 @@ object Drive : Subsystem() {
 
     private var followingPath = false
     var useGyro = true
+        @Synchronized
+        set(value) {
+            field = value
+        }
 
-    val leftPosition: Double get() = ticksToInches(leftSide.getSelectedSensorPosition(0).toDouble())
-    val rightPosition: Double get() = ticksToInches(rightSide.getSelectedSensorPosition(0).toDouble())
+    val leftPosition: Double
+        @Synchronized
+        get() = ticksToInches(leftSide.getSelectedSensorPosition(0).toDouble())
+    val rightPosition: Double
+        @Synchronized
+        get() = ticksToInches(rightSide.getSelectedSensorPosition(0).toDouble())
 
-    val leftVelocity: Double get() = ticksToInchesPerSecond(leftSide.getSelectedSensorVelocity(0).toDouble())
-    val rightVelocity: Double get() = ticksToInchesPerSecond(rightSide.getSelectedSensorVelocity(0).toDouble())
+    val leftVelocity: Double
+        @Synchronized
+        get() = ticksToInchesPerSecond(leftSide.getSelectedSensorVelocity(0).toDouble())
+    val rightVelocity: Double
+        @Synchronized
+        get() = ticksToInchesPerSecond(rightSide.getSelectedSensorVelocity(0).toDouble())
 
-    val gyroAngle: Rotation2D get() = Rotation2D.fromDegrees(gyro.yaw.toDouble())
+    val gyroAngle: Rotation2D
+        @Synchronized
+        get() = Rotation2D.fromDegrees(gyro.yaw.toDouble())
 
-    val finishedPath get() = ppController.isDone
+    val finishedPath
+        @Synchronized
+        get() = ppController.isDone
 
     var leftSetpoint: Double = 0.0
+        @Synchronized
+        set(value) {
+            field = value
+        }
     var rightSetpoint: Double = 0.0
+        @Synchronized
+        set(value) {
+            field = value
+        }
     var gyroSetpoint: Rotation2D = Rotation2D.fromDegrees(0.0)
+        @Synchronized
+        set(value) {
+            field = value
+        }
 
     override val json get() = JsonObject().apply {
         addProperty("left_velocity", leftVelocity)
