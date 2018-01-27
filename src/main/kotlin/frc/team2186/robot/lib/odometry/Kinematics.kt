@@ -1,15 +1,18 @@
 package frc.team2186.robot.lib.odometry
 
-import frc.team2186.robot.Config
 import frc.team2186.robot.lib.math.RigidTransform2D
 import frc.team2186.robot.lib.math.Rotation2D
 import kotlin.math.abs
 
 object Kinematics {
+    var trackScrubFactor = 0.5
+    var wheelDiameter = 6.0
+    var effectiveWheelDiameter = 6.0
+
     fun forwardKinematics(leftWheelDelta: Double, rightWheelDelta: Double): RigidTransform2D.Delta {
         val linearVel = (leftWheelDelta + rightWheelDelta) / 2
         val deltaV = (rightWheelDelta - leftWheelDelta) / 2
-        val deltaTheta = deltaV * 2 * Config.Drive.trackScrubFactor / Config.Drive.effectiveWheelDiameter
+        val deltaTheta = deltaV * 2 * trackScrubFactor / effectiveWheelDiameter
 
         return RigidTransform2D.Delta(
                 linearVel,
@@ -39,7 +42,7 @@ object Kinematics {
             return DriveVelocity(velocity.deltaX, velocity.deltaY)
         }
 
-        val deltaV = Config.Drive.wheelDiameter * velocity.deltaTheta / (2 * Config.Drive.trackScrubFactor)
+        val deltaV = wheelDiameter * velocity.deltaTheta / (2 * trackScrubFactor)
         return DriveVelocity(velocity.deltaX - deltaV, velocity.deltaX + deltaV)
     }
 }

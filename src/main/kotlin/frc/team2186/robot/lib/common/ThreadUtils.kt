@@ -1,3 +1,4 @@
+@file:JvmName("ThreadUtils")
 package frc.team2186.robot.lib.common
 
 fun thread(start: Boolean = true, isDaemon: Boolean = false, contextLoader: ClassLoader? = null, name: String? = null, priority: Int = -1, block: () -> Unit): Thread {

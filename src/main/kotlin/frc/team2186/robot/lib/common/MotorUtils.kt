@@ -1,3 +1,4 @@
+@file:JvmName("MotorUtils")
 package frc.team2186.robot.lib.common
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX

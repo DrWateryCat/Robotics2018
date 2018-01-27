@@ -1,3 +1,4 @@
+@file:JvmName("AutoUtils")
 package frc.team2186.robot.lib.common
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser

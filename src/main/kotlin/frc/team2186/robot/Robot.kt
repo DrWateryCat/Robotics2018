@@ -12,6 +12,7 @@ import frc.team2186.robot.common.ScaleState
 import frc.team2186.robot.common.SwitchState
 import frc.team2186.robot.lib.common.AutonomousManager
 import frc.team2186.robot.lib.interfaces.AutonomousMode
+import frc.team2186.robot.lib.odometry.Kinematics
 import frc.team2186.robot.subsystems.RobotPoseEstimator
 import frc.team2186.robot.subsystems.*
 
@@ -29,6 +30,11 @@ class Robot : IterativeRobot() {
         Lifter
         Camera
         //Manipulator
+        Kinematics.apply {
+            wheelDiameter = Config.Drive.wheelDiameter
+            effectiveWheelDiameter = Config.Drive.effectiveWheelDiameter
+            trackScrubFactor = Config.Drive.trackScrubFactor
+        }
 
         autoChooser.apply {
             AutonomousManager.sendableChooser()
