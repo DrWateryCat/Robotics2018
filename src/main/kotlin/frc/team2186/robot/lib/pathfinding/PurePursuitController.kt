@@ -72,16 +72,14 @@ class PurePursuitController (
             speed = minSpeed * sign(speed)
         }
 
-        var ret: RigidTransform2D.Delta
-
-        if (circle != null) {
-            ret = RigidTransform2D.Delta(
+        val ret = if (circle != null) {
+            RigidTransform2D.Delta(
                     speed,
                     0.0,
                     (if (circle.turnRight) -1 else 1 ) * abs(speed) / circle.radius
             )
         } else {
-            ret = RigidTransform2D.Delta(speed, 0.0, 0.0)
+            RigidTransform2D.Delta(speed, 0.0, 0.0)
         }
 
         lastTime = now
