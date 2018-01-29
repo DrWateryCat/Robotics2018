@@ -13,12 +13,14 @@ In order to deploy this code to the robot, follow these steps.
 
 ## Current Status
 * Drive subsystem implemented and ready to test
+* Lifter implemented as far as possible
+* Autonomous paths planned out, ready for testing.
 * Odometry ready to test
 * PID ready to tune
 * LEDs ready to go
 
 ## Current Roadmap
 * Tune the drive PID
-* Finalize the design for the manipulator
-* Implement the manipulator
-* Investigate possible paths for autonomous
+* Tune the lifter
+* Test the autonomous
+* Build the robot
