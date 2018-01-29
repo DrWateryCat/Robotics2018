@@ -1,5 +1,7 @@
 package frc.team2186.robot
 
+import java.io.File
+
 object Config {
     object Drive {
         const val leftMasterID = 0
@@ -12,7 +14,7 @@ object Config {
         const val trackScrubFactor: Double = 0.5
         const val effectiveWheelDiameter = (wheelDiameter * wheelDiameter + wheelBaseLength * wheelBaseLength) / wheelBaseLength
 
-        const val ticksPerRevolution = 1440.0
+        const val ticksPerRevolution = 1440.0 * 4
         const val ticksPer100ms = ticksPerRevolution / 600
 
         const val kLeftP = 1.0
@@ -36,7 +38,13 @@ object Config {
 
     object Lifter {
         const val motorID = 0
+        const val barMotorID = 1
+
         const val sensorID = 0
+
+        const val barDownLimitSwitchID = 0
+        const val barUpLimitSwitchID = 1
+
         const val kP = 1.0
         const val kI = 0.0
         const val kD = 0.0
@@ -48,6 +56,8 @@ object Config {
         const val nominalDt = 0.0
         const val completionTolerance = 0.25
         const val maxVelocity = 100.0
+
+        val waypointsFile = javaClass.classLoader.getResource("waypoints.json")!!
     }
 
     object Controls {

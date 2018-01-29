@@ -1,5 +1,7 @@
 package frc.team2186.robot.autonomous
 
+import frc.team2186.robot.Robot
+import frc.team2186.robot.common.Waypoints
 import frc.team2186.robot.lib.common.actionRunner
 import frc.team2186.robot.lib.interfaces.SequentialAutonomousMode
 import frc.team2186.robot.lib.pathfinding.path
@@ -14,12 +16,12 @@ class Switch : SequentialAutonomousMode("Switch") {
             marker = "Start"
         }
         waypoint {
-            position = translation(60.0, -12.0)
-            speed = 40.0
+            position = Waypoints.switch(Robot.StartingPosition, Robot.StartingSwitch).scale(0.5)
+            speed = 60.0
             marker = "Middle"
         }
         waypoint {
-            position = translation(80.0, -6.0)
+            position = Waypoints.switch(Robot.StartingPosition, Robot.StartingSwitch)
             speed = 0.0
             marker = "End"
         }
@@ -31,12 +33,19 @@ class Switch : SequentialAutonomousMode("Switch") {
         }
         action {
             Lifter.set(0.25)
-            Drive.finishedPath && Lifter.done
+
+            Drive.finishedPath and Lifter.done
         }
-        actionComplete {
+        action {
             Drive.stop()
-            Drive.reset()
-            Lifter.stop()
+            Lifter.barUp()
+
+            Lifter.isBarUp and Drive.stopped
+        }
+        action {
+            Lifter.barDown()
+
+            Lifter.isBarDown
         }
     }
 }

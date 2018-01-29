@@ -39,6 +39,11 @@ class Path (vararg waypointList: Waypoint){
 
     fun waypoint(block: Waypoint.() -> Unit) = waypoints.add(Waypoint(Translation2D(0.0, 0.0), 0.0).apply(block))
     fun translation(x: Double, y: Double): Translation2D = Translation2D(x, y)
+    fun startingPoint() = waypoint {
+        position = translation(0.0, 0.0)
+        speed = 0.0
+        marker = "Start"
+    }
 
     fun update(pos: Translation2D): Double {
         var ret = 0.0

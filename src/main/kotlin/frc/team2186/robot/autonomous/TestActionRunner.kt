@@ -16,7 +16,7 @@ class TestActionRunner : SequentialAutonomousMode("Action Runner Test") {
             Drive.setForwardRPM(60.0)
             Lifter.set(0.5)
 
-            Drive.leftPosition >= 60.0 && Drive.rightPosition >= 60.0 && Lifter.done
+            (Drive.leftPosition >= 60.0) and (Drive.rightPosition >= 60.0) and (Lifter.done)
         }
         actionComplete {
             Drive.reset()

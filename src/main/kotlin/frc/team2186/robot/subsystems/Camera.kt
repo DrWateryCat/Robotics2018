@@ -11,6 +11,7 @@ object Camera : Subsystem() {
 
     override val json: JsonObject
         get() = JsonObject().apply {
+            addProperty("camera_connected", cam.isConnected)
         }
     init {
         server.source = cam

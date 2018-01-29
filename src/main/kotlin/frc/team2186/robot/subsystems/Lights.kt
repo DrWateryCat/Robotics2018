@@ -1,6 +1,7 @@
 package frc.team2186.robot.subsystems
 
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import edu.wpi.first.wpilibj.SerialPort
 import frc.team2186.robot.lib.interfaces.Subsystem
 
@@ -43,7 +44,9 @@ object Lights : Subsystem() {
             addProperty("blue", blue)
         }
 
-    private val serial = SerialPort(9600, SerialPort.Port.kUSB)
+    private val serial = SerialPort(9600, SerialPort.Port.kUSB).apply {
+        enableTermination('\n')
+    }
 
     override fun update() {
         serial.writeString(json.asString)

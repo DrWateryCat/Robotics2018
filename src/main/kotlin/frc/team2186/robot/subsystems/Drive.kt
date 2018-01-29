@@ -13,6 +13,7 @@ import frc.team2186.robot.Config
 import frc.team2186.robot.Robot
 import frc.team2186.robot.common.RobotState
 import frc.team2186.robot.common.SynchronousPID
+import frc.team2186.robot.lib.common.inRange
 import frc.team2186.robot.lib.math.Rotation2D
 import frc.team2186.robot.lib.odometry.FramesOfReference
 import frc.team2186.robot.lib.odometry.Kinematics
@@ -50,49 +51,53 @@ object Drive : Subsystem() {
     private lateinit var ppController: PurePursuitController
 
     private var followingPath = false
-    var useGyro = true
-        @Synchronized
-        set(value) {
-            field = value
-        }
 
+    @set:Synchronized
+    var useGyro = true
+
+    @set:Synchronized
+    var useVelocityPid = true
+
+    @get:Synchronized
     val leftPosition: Double
-        @Synchronized
         get() = ticksToInches(leftSide.getSelectedSensorPosition(0).toDouble())
+
+    @get:Synchronized
     val rightPosition: Double
-        @Synchronized
         get() = ticksToInches(rightSide.getSelectedSensorPosition(0).toDouble())
 
+    @get:Synchronized
     val leftVelocity: Double
-        @Synchronized
         get() = ticksToInchesPerSecond(leftSide.getSelectedSensorVelocity(0).toDouble())
+
+    @get:Synchronized
     val rightVelocity: Double
-        @Synchronized
         get() = ticksToInchesPerSecond(rightSide.getSelectedSensorVelocity(0).toDouble())
 
+    @get:Synchronized
+    val velocities: Pair<Double, Double>
+        get() = Pair(leftVelocity, rightVelocity)
+
+    @get:Synchronized
+    val stopped: Boolean
+        get() = velocities inRange Pair(-0.05, 0.05)
+
+    @get:Synchronized
     val gyroAngle: Rotation2D
-        @Synchronized
         get() = Rotation2D.fromDegrees(gyro.yaw.toDouble())
 
+    @get:Synchronized
     val finishedPath
-        @Synchronized
         get() = ppController.isDone
 
+    @set:Synchronized
     var leftSetpoint: Double = 0.0
-        @Synchronized
-        set(value) {
-            field = value
-        }
+
+    @set:Synchronized
     var rightSetpoint: Double = 0.0
-        @Synchronized
-        set(value) {
-            field = value
-        }
+
+    @set:Synchronized
     var gyroSetpoint: Rotation2D = Rotation2D.fromDegrees(0.0)
-        @Synchronized
-        set(value) {
-            field = value
-        }
 
     override val json get() = JsonObject().apply {
         addProperty("left_velocity", leftVelocity)
@@ -155,6 +160,8 @@ object Drive : Subsystem() {
 
     @Synchronized
     fun stop() {
+        useVelocityPid = false
+
         leftSetpoint = 0.0
         rightSetpoint = 0.0
 
@@ -221,6 +228,8 @@ object Drive : Subsystem() {
                         DriveData(leftSetpoint, rightSetpoint)
                     }
                     followingPath -> {
+                        if (finishedPath)
+                            followingPath = false
                         updatePathFollower()
                     }
                     else -> {
@@ -228,8 +237,8 @@ object Drive : Subsystem() {
                     }
                 }
 
-                leftSide.set(ControlMode.Velocity, command.left)
-                rightSide.set(ControlMode.Velocity, command.right)
+                leftSide.set(if (useVelocityPid) ControlMode.Velocity else ControlMode.PercentOutput, command.left)
+                rightSide.set(if (useVelocityPid) ControlMode.Velocity else ControlMode.PercentOutput, command.right)
             }
         }
     }
