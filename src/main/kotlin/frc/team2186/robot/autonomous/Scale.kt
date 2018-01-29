@@ -47,6 +47,7 @@ class Scale : SequentialAutonomousMode("Scale") {
             Drive.stopped
         }
         action {
+            Drive.useVelocityPid = true
             Drive.gyroSetpoint = Rotation2D.fromDegrees(90.0)
 
             Drive.gyroAngle.degrees == 90.0
