@@ -2,55 +2,64 @@ package frc.team2186.robot.subsystems
 
 import com.ctre.phoenix.motorcontrol.ControlMode
 import com.ctre.phoenix.motorcontrol.FeedbackDevice
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
-import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX
 import com.google.gson.JsonObject
 import com.kauailabs.navx.frc.AHRS
-import edu.wpi.first.wpilibj.SerialPort
-import edu.wpi.first.wpilibj.Timer
+import edu.wpi.first.wpilibj.*
 import frc.team2186.robot.lib.interfaces.Subsystem
 import frc.team2186.robot.Config
 import frc.team2186.robot.Robot
 import frc.team2186.robot.common.RobotState
-import frc.team2186.robot.common.SynchronousPID
-import frc.team2186.robot.lib.common.inRange
+import frc.team2186.robot.lib.common.*
 import frc.team2186.robot.lib.math.Rotation2D
 import frc.team2186.robot.lib.odometry.FramesOfReference
 import frc.team2186.robot.lib.odometry.Kinematics
 import frc.team2186.robot.lib.pathfinding.Path
 import frc.team2186.robot.lib.pathfinding.PurePursuitController
-import frc.team2186.robot.lib.common.plus
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.max
 
-object Drive : Subsystem() {
+object Drive : Subsystem(){
     private data class DriveData(val left: Double, val right: Double)
 
-    private val leftSide = WPI_TalonSRX(Config.Drive.leftMasterID).apply {
+    private val leftSide = CANTalon(Config.Drive.leftMasterID).apply {
         configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0)
         config_kP(0, Config.Drive.kLeftP, 0)
         config_kI(0, Config.Drive.kLeftI, 0)
         config_kD(0, Config.Drive.kLeftD, 0)
         config_kF(0, Config.Drive.kLeftF, 0)
-    } + WPI_VictorSPX(Config.Drive.leftSlaveID).apply {
+    } + CANVictor(Config.Drive.leftSlaveID).apply {
     }
 
-    private val rightSide = WPI_TalonSRX(Config.Drive.rightMasterID).apply {
+    private val rightSide = CANTalon(Config.Drive.rightMasterID).apply {
         configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0)
         config_kP(0, Config.Drive.kRightP, 0)
         config_kI(0, Config.Drive.kRightI, 0)
         config_kD(0, Config.Drive.kRightD, 0)
         config_kF(0, Config.Drive.kRightF, 0)
         inverted = true
-    } + WPI_VictorSPX(Config.Drive.rightSlaveID).apply {
+    } + CANVictor(Config.Drive.rightSlaveID).apply {
+    }
+
+    private val pidInterface = PIDInput {
+        gyroSetpoint.rotateBy(gyroAngle.inverse()).degrees
     }
 
     private val gyro = AHRS(SerialPort.Port.kMXP)
-    private val velocityHeadingPID = SynchronousPID(1.0, 0.0, 0.0)
+    private val velocityHeadingPID = PIDController(Config.Drive.kHeadingP,
+                                                   Config.Drive.kHeadingI,
+                                                   Config.Drive.kHeadingD,
+                                                   pidInterface,
+                                                   PIDOutput {
+        deltaV = it
+    })
+
     private lateinit var ppController: PurePursuitController
 
     private var followingPath = false
+
+    @set:Synchronized
+    private var deltaV = 0.0
 
     @set:Synchronized
     var useGyro = true
@@ -137,16 +146,6 @@ object Drive : Subsystem() {
     }
 
     @Synchronized
-    fun setLeft(value: Double) {
-        leftSetpoint = value
-    }
-
-    @Synchronized
-    fun setRight(value: Double) {
-        rightSetpoint = value
-    }
-
-    @Synchronized
     fun setForwardVelocity(ips: Double) {
         leftSetpoint = ips
         rightSetpoint = ips
@@ -183,14 +182,7 @@ object Drive : Subsystem() {
         followingPath = true
     }
 
-    private fun updateVelocityHeading(): DriveData {
-        val currentGyro = gyroAngle
-        val lastHeadingError = gyroSetpoint.rotateBy(currentGyro.inverse()).degrees
-
-        val deltaV = velocityHeadingPID.calculate(lastHeadingError)
-
-        return DriveData(leftSetpoint + deltaV / 2, rightSetpoint + deltaV / 2)
-    }
+    private fun updateVelocityHeading() = DriveData(leftSetpoint + deltaV / 2, rightSetpoint + deltaV / 2)
 
     private fun updatePathFollower(): DriveData {
         val currentPose = FramesOfReference.latestFieldToVehicle().value
@@ -223,18 +215,17 @@ object Drive : Subsystem() {
             }
 
             Robot.CurrentMode == RobotState.AUTONOMOUS -> {
-                val command: DriveData = when {
-                    useGyro.not() -> {
-                        DriveData(leftSetpoint, rightSetpoint)
-                    }
+                val command = when {
+                    useGyro.not() -> DriveData(leftSetpoint, rightSetpoint)
                     followingPath -> {
                         if (finishedPath)
                             followingPath = false
                         updatePathFollower()
                     }
-                    else -> {
+                    useVelocityPid -> {
                         updateVelocityHeading()
                     }
+                    else -> DriveData(leftSetpoint, rightSetpoint)
                 }
 
                 leftSide.set(if (useVelocityPid) ControlMode.Velocity else ControlMode.PercentOutput, command.left)

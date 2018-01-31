@@ -16,9 +16,9 @@ abstract class Subsystem {
 
     abstract fun update()
 
-    fun accessSync(block: () -> Unit) {
+    fun accessSync(block: Subsystem.() -> Unit) {
         synchronized(this) {
-            block()
+            this.apply(block)
         }
     }
 }

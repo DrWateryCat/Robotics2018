@@ -36,10 +36,13 @@ class ActionRunner {
     private val actions = ArrayList<IterativeAutoAction>()
     private val actionCompletedCallbacks = ArrayList<() -> Unit>()
     private lateinit var initBlock: () -> Unit
+    private lateinit var endBlock: () -> Unit
+    private var ranEnd = false
     val done get() = (actions.size > 0).not()
 
     fun action(block: () -> Boolean) = actions.add(IterativeAutoAction(block))
     fun actionComplete(block: () -> Unit) = actionCompletedCallbacks.add(block)
+    fun allActionsComplete(block: () -> Unit) { endBlock = block }
     fun init(block: () -> Unit) {initBlock = block}
 
     fun init() {
@@ -47,7 +50,7 @@ class ActionRunner {
     }
 
     fun update() {
-        if (actions[0].done.and(done.not())) {
+        if (actions[0].done and done.not()) {
             if (actions.size > 0) {
                 actions.removeAt(0)
                 actionCompletedCallbacks.forEach { cb ->
@@ -56,6 +59,13 @@ class ActionRunner {
             }
         } else {
             actions[0].run()
+        }
+
+        if (done) {
+            if (ranEnd.not()) {
+                endBlock()
+                ranEnd = true
+            }
         }
     }
 }

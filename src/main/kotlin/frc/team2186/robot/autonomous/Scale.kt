@@ -11,6 +11,11 @@ import frc.team2186.robot.lib.math.Rotation2D
 import frc.team2186.robot.lib.pathfinding.path
 import frc.team2186.robot.subsystems.Drive
 import frc.team2186.robot.subsystems.Lifter
+import frc.team2186.robot.subsystems.Lights
+import frc.team2186.robot.subsystems.Lights.animation
+import frc.team2186.robot.subsystems.Lights.blue
+import frc.team2186.robot.subsystems.Lights.green
+import frc.team2186.robot.subsystems.Lights.red
 
 class Scale : SequentialAutonomousMode("Scale") {
     val p = path {
@@ -71,6 +76,14 @@ class Scale : SequentialAutonomousMode("Scale") {
             Lifter.set(0.0)
 
             Lifter.done
+        }
+        allActionsComplete {
+            Lights.accessSync {
+                red = 0
+                green = 255
+                blue = 0
+                animation = Lights.Animations.MANUAL
+            }
         }
     }
 }

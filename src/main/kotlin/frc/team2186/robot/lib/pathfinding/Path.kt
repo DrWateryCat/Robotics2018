@@ -44,6 +44,19 @@ class Path (vararg waypointList: Waypoint){
         speed = 0.0
         marker = "Start"
     }
+    fun halfWayTo(point: Translation2D, s: Double, m: String = "") = waypoint {
+        position = point
+        speed = s
+        marker = m
+    }
+    fun pathTo(point: Translation2D, s: Double) = path {
+        startingPoint()
+        halfWayTo(point, s)
+        waypoint {
+            position = point
+            speed = 0.0
+        }
+    }
 
     fun update(pos: Translation2D): Double {
         var ret = 0.0

@@ -26,6 +26,11 @@ object Config {
         const val kRightI = 0.0
         const val kRightD = 0.0
         const val kRightF = 0.05
+
+        const val kHeadingP = 1.0
+        const val kHeadingI = 0.0
+        const val kHeadingD = 0.0
+        const val kHeadingF = 0.05
     }
 
     object Manipulator {

@@ -13,7 +13,9 @@ object Lifter : Subsystem() {
     private val barDownSensor = DigitalInput(Config.Lifter.barDownLimitSwitchID)
     private val barUpSensor = DigitalInput(Config.Lifter.barUpLimitSwitchID)
     private val pidController = PIDController(Config.Lifter.kP, Config.Lifter.kI, Config.Lifter.kD, sensor, PIDOutput {
-        set(it)
+        synchronized(Lifter) {
+            set(it)
+        }
     }).apply {
         setInputRange(0.0, 360.0)
         setContinuous(false)
