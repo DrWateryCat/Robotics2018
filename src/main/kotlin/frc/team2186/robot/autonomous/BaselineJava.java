@@ -2,11 +2,10 @@ package frc.team2186.robot.autonomous;
 
 import frc.team2186.robot.lib.common.ActionRunner;
 import frc.team2186.robot.lib.interfaces.SequentialAutonomousMode;
-import frc.team2186.robot.subsystems.Drive;
-import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 
-import static frc.team2186.robot.autonomous.CommonAuto.*;
+import static frc.team2186.robot.autonomous.CommonAuto.goDistance;
+import static frc.team2186.robot.autonomous.CommonAuto.stop;
 
 public class BaselineJava extends SequentialAutonomousMode {
     public BaselineJava() {

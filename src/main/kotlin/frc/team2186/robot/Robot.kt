@@ -5,20 +5,18 @@ import edu.wpi.first.wpilibj.IterativeRobot
 import edu.wpi.first.wpilibj.Joystick
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
-import frc.team2186.robot.autonomous.*
 import frc.team2186.robot.common.RobotPosition
 import frc.team2186.robot.common.RobotState
 import frc.team2186.robot.common.ScaleState
 import frc.team2186.robot.common.SwitchState
-import frc.team2186.robot.lib.common.AutonomousManager
 import frc.team2186.robot.lib.interfaces.AutonomousMode
 import frc.team2186.robot.lib.odometry.Kinematics
-import frc.team2186.robot.subsystems.RobotPoseEstimator
 import frc.team2186.robot.subsystems.*
 import frc.team2186.robot.subsystems.Lifter.set
+import org.reflections.Reflections
 
 class Robot : IterativeRobot() {
-    val autoChooser = SendableChooser<AutonomousMode>()
+    var autoChooser: SendableChooser<AutonomousMode>? = null
     val positionChooser = SendableChooser<RobotPosition>()
 
     val leftJoystick = Joystick(Config.Controls.leftJoystickID)
@@ -46,9 +44,23 @@ class Robot : IterativeRobot() {
             effectiveWheelDiameter = Config.Drive.effectiveWheelDiameter
             trackScrubFactor = Config.Drive.trackScrubFactor
         }
+        autoChooser = SendableChooser()
 
-        autoChooser.apply {
-            AutonomousManager.sendableChooser()
+        autoChooser?.apply {
+            try {
+                Reflections("frc.team2186.robot.autonomous").getSubTypesOf(AutonomousMode::class.java).forEach { it ->
+                    val c = it.newInstance()
+                    if (c.default) {
+                        addDefault(c.name, c)
+                    } else {
+                        addObject(c.name, c)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                println("Disabling autonomous.")
+                autoChooser = null
+            }
         }
 
         SmartDashboard.putData("autonomous", autoChooser)
@@ -65,13 +77,13 @@ class Robot : IterativeRobot() {
     override fun autonomousInit() {
         updateSwitchScale()
         Lifter.usePID = true
-        autoChooser.selected.init()
+        autoChooser?.selected?.init() ?: println("Attempted to initialize the selected autonomous, but it was null!")
 
         CurrentMode = RobotState.AUTONOMOUS
     }
 
     override fun autonomousPeriodic() {
-        autoChooser.selected.update()
+        autoChooser?.selected?.update()
     }
 
     override fun teleopInit() {

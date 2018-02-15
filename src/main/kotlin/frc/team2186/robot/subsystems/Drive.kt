@@ -5,16 +5,22 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice
 import com.google.gson.JsonObject
 import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.*
+import edu.wpi.first.wpilibj.Timer
 import frc.team2186.robot.lib.interfaces.Subsystem
 import frc.team2186.robot.Config
 import frc.team2186.robot.Robot
 import frc.team2186.robot.common.RobotState
 import frc.team2186.robot.lib.common.*
+import frc.team2186.robot.lib.interfaces.Interpolable
+import frc.team2186.robot.lib.math.InterpolatingDouble
+import frc.team2186.robot.lib.math.InterpolatingTreeMap
 import frc.team2186.robot.lib.math.Rotation2D
 import frc.team2186.robot.lib.odometry.FramesOfReference
 import frc.team2186.robot.lib.odometry.Kinematics
 import frc.team2186.robot.lib.pathfinding.Path
 import frc.team2186.robot.lib.pathfinding.PurePursuitController
+import java.io.File
+import java.util.*
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.max
@@ -54,6 +60,9 @@ object Drive : Subsystem(){
     })
 
     private lateinit var ppController: PurePursuitController
+    private val recording = InterpolatingTreeMap<InterpolatingDouble, InterpolatingPair>()
+    private var recordingFile: File? = null
+    private var startTime = 0.0
 
     private var followingPath = false
 
@@ -65,6 +74,9 @@ object Drive : Subsystem(){
 
     @set:Synchronized
     var useVelocityPid = true
+
+    @get:Synchronized
+    var isRecording = false
 
     @get:Synchronized
     val leftPosition: Double
@@ -139,6 +151,28 @@ object Drive : Subsystem(){
     fun nativeToRpm(native: Double) = native / (Config.Drive.ticksPerRevolution / 600)
 
     @Synchronized
+    fun record(filePath: String) {
+        recordingFile = File(filePath)
+        isRecording = true
+        startTime = Timer.getFPGATimestamp()
+    }
+
+    @Synchronized
+    fun stopRecording() {
+        isRecording = false
+        val outputData = JsonObject().apply {
+            recording.forEach { k, v ->
+                add("${k.value}", JsonObject().apply {
+                    addProperty("left_rpm", v.first)
+                    addProperty("right_rpm", v.second)
+                })
+            }
+        }
+
+        recordingFile?.printWriter()?.print(outputData.toString())
+    }
+
+    @Synchronized
     fun reset() {
         leftSide.setSelectedSensorPosition(0, 0, 0)
         rightSide.setSelectedSensorPosition(0, 0, 0)
@@ -211,6 +245,10 @@ object Drive : Subsystem(){
             Robot.CurrentMode == RobotState.TELEOP -> {
                 leftSide.set(ControlMode.PercentOutput, -leftSetpoint)
                 rightSide.set(ControlMode.PercentOutput, rightSetpoint)
+
+                if (isRecording) {
+                    recording[InterpolatingDouble(Timer.getFPGATimestamp() - startTime)] = InterpolatingPair(leftVelocity, rightVelocity)
+                }
             }
 
             Robot.CurrentMode == RobotState.AUTONOMOUS -> {
