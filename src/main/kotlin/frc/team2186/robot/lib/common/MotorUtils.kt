@@ -22,6 +22,12 @@ operator fun IMotorController.plus(slave: IMotorController) = apply {
     slave.follow(this)
 }
 
+fun CANTalon.setupCurrentLimiting(amps: Int) = apply {
+    this.enableCurrentLimit(true)
+    this.configPeakCurrentLimit(amps, 0)
+    this.configContinuousCurrentLimit(amps, 0)
+}
+
 class PIDInput(val block: () -> Double): PIDSource {
     var sourceType = PIDSourceType.kDisplacement
     override fun getPIDSourceType() = sourceType

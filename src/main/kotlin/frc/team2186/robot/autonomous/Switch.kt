@@ -32,9 +32,7 @@ class Switch : SequentialAutonomousMode("Switch") {
             Drive.followPath(p)
         }
         action {
-            Lifter.set(0.25)
-
-            Drive.finishedPath and Lifter.done
+            Drive.finishedPath
         }
         action {
             Drive.stop()

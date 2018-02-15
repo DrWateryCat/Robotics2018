@@ -15,6 +15,7 @@ import frc.team2186.robot.lib.interfaces.AutonomousMode
 import frc.team2186.robot.lib.odometry.Kinematics
 import frc.team2186.robot.subsystems.RobotPoseEstimator
 import frc.team2186.robot.subsystems.*
+import frc.team2186.robot.subsystems.Lifter.set
 
 class Robot : IterativeRobot() {
     val autoChooser = SendableChooser<AutonomousMode>()
@@ -22,14 +23,24 @@ class Robot : IterativeRobot() {
 
     val leftJoystick = Joystick(Config.Controls.leftJoystickID)
     val rightJoystick = Joystick(Config.Controls.rightJoystickID)
+    val codriver = Joystick(Config.Controls.codriverJoystickID)
+
+    val subsystems = arrayListOf(
+            Drive,
+            DashboardUpdater,
+            RobotPoseEstimator,
+            Grabber,
+            Lifter
+    )
+
     override fun robotInit() {
         Drive
         DashboardUpdater
         RobotPoseEstimator
         Grabber
         Lifter
-        Camera
-        //Manipulator
+        //Camera
+
         Kinematics.apply {
             wheelDiameter = Config.Drive.wheelDiameter
             effectiveWheelDiameter = Config.Drive.effectiveWheelDiameter
@@ -53,6 +64,7 @@ class Robot : IterativeRobot() {
 
     override fun autonomousInit() {
         updateSwitchScale()
+        Lifter.usePID = true
         autoChooser.selected.init()
 
         CurrentMode = RobotState.AUTONOMOUS
@@ -64,12 +76,42 @@ class Robot : IterativeRobot() {
 
     override fun teleopInit() {
         CurrentMode = RobotState.TELEOP
+        Lifter.usePID = false
     }
 
     override fun teleopPeriodic() {
         Drive.accessSync {
             Drive.leftSetpoint = leftJoystick.getRawAxis(1)
             Drive.rightSetpoint = rightJoystick.getRawAxis(1)
+        }
+        Lifter.accessSync {
+            when {
+                codriver.getRawButton(Config.Controls.lifterUpButton) -> {
+                    set(0.25)
+                }
+                codriver.getRawButton(Config.Controls.lifterDownButton) -> {
+                    set(-0.25)
+                }
+                else -> {
+                    set(0.0)
+                }
+            }
+        }
+        Grabber.accessSync {
+            when {
+                codriver.getRawButton(Config.Controls.grabberInButton) -> {
+                    Grabber.value = 0.5
+                }
+                codriver.getRawButton(Config.Controls.grabberOutButton) -> {
+                    Grabber.value = -0.5
+                }
+                else -> {
+                    Grabber.value = 0.0
+                }
+            }
+        }
+        subsystems.forEach {
+            it.update()
         }
     }
 

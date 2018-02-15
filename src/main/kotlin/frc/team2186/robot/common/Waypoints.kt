@@ -7,11 +7,10 @@ import frc.team2186.robot.lib.math.Translation2D
 import java.io.File
 
 object Waypoints {
-    private val waypoints: JsonObject
-        get() = JsonParser()
-                .parse(File(Config.PathFollowing.waypointsFile.toURI())
+    private val waypoints: JsonObject by lazy { JsonParser()
+                .parse(File(Config.PathFollowing.waypointsFile)
                         .bufferedReader())
-                .asJsonObject
+                .asJsonObject }
 
     private fun getFromPosition(robotPosition: RobotPosition): JsonObject {
         return waypoints.getAsJsonObject("starting").getAsJsonObject(when(robotPosition) {
@@ -39,9 +38,13 @@ object Waypoints {
         return Translation2D(waypoint["x"].asDouble, waypoint["y"].asDouble)
     }
 
-    val baseline: Translation2D
-        get() {
-            val waypoint = waypoints["baseline"].asJsonObject
-            return Translation2D(waypoint["x"].asDouble, waypoint["y"].asDouble)
+    fun baseline(robotPosition: RobotPosition): Translation2D {
+        val waypoint = waypoints["baseline"].asJsonObject
+        val b = Translation2D(waypoint["x"].asDouble, waypoint["y"].asDouble)
+        return when(robotPosition) {
+            RobotPosition.LEFT -> b
+            RobotPosition.RIGHT -> b
+            RobotPosition.MIDDLE -> b.translateBy(Translation2D(24.0, 0.0))
         }
+    }
 }

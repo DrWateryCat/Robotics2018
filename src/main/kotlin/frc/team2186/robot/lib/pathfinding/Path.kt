@@ -152,6 +152,7 @@ class Path (vararg waypointList: Waypoint){
             }
         }
 
+        //After the last point, so extrapolate forward
         val lastSegment = segments.lastOrNull()!!
         val newLastSegment = PathSegment(lastSegment.start, lastSegment.interpolate(10000.0), lastSegment.speed)
 
@@ -200,15 +201,13 @@ class Path (vararg waypointList: Waypoint){
             val posDotProduct = segment.dotProduct(posSolution)
             val negDotProduct = segment.dotProduct(negSolution)
 
-            if ((posDotProduct < 0).and(negDotProduct >= 0)) {
-                return negSolution
-            } else if ((posDotProduct >= 0).and(negDotProduct < 0)) {
-                return posSolution
-            } else {
-                if (abs(posDotProduct) <= abs(negDotProduct)) {
-                    return posSolution
+            return when {
+                (posDotProduct < 0).and(negDotProduct >= 0) -> negSolution
+                (posDotProduct >= 0).and(negDotProduct < 0) -> posSolution
+                else -> if (abs(posDotProduct) <= abs(negDotProduct)) {
+                    posSolution
                 } else {
-                    return negSolution
+                    negSolution
                 }
             }
         }

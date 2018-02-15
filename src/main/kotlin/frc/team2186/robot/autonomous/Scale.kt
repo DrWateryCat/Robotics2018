@@ -58,9 +58,9 @@ class Scale : SequentialAutonomousMode("Scale") {
             Drive.gyroAngle.degrees == 90.0
         }
         action {
-            Lifter.set(1.0)
+            Lifter.fullUp()
 
-            Lifter.done
+            Lifter.isFullUp
         }
         action {
             Lifter.barUp()
@@ -73,9 +73,9 @@ class Scale : SequentialAutonomousMode("Scale") {
             Lifter.isBarDown
         }
         action {
-            Lifter.set(0.0)
+            Lifter.fullDown()
 
-            Lifter.done
+            Lifter.isFullDown
         }
         allActionsComplete {
             Lights.accessSync {

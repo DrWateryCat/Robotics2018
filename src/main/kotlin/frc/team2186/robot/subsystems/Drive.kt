@@ -37,7 +37,6 @@ object Drive : Subsystem(){
         config_kI(0, Config.Drive.kRightI, 0)
         config_kD(0, Config.Drive.kRightD, 0)
         config_kF(0, Config.Drive.kRightF, 0)
-        inverted = true
     } + CANVictor(Config.Drive.rightSlaveID).apply {
     }
 
@@ -210,7 +209,7 @@ object Drive : Subsystem(){
             }
 
             Robot.CurrentMode == RobotState.TELEOP -> {
-                leftSide.set(ControlMode.PercentOutput, leftSetpoint)
+                leftSide.set(ControlMode.PercentOutput, -leftSetpoint)
                 rightSide.set(ControlMode.PercentOutput, rightSetpoint)
             }
 
@@ -228,7 +227,7 @@ object Drive : Subsystem(){
                     else -> DriveData(leftSetpoint, rightSetpoint)
                 }
 
-                leftSide.set(if (useVelocityPid) ControlMode.Velocity else ControlMode.PercentOutput, command.left)
+                leftSide.set(if (useVelocityPid) ControlMode.Velocity else ControlMode.PercentOutput, -command.left)
                 rightSide.set(if (useVelocityPid) ControlMode.Velocity else ControlMode.PercentOutput, command.right)
             }
         }

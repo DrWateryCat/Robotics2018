@@ -12,9 +12,6 @@ object RobotPoseEstimator : Subsystem() {
 
     override val json: JsonObject
         get() = JsonObject().apply {
-            FramesOfReference.latestFieldToVehicle().value.json.entrySet().forEach {
-                addProperty(it.key, it.value.asString)
-            }
         }
 
     override fun update() {

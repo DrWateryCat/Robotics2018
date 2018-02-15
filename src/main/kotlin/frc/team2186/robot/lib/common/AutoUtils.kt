@@ -41,6 +41,7 @@ class ActionRunner {
     val done get() = (actions.size > 0).not()
 
     fun action(block: () -> Boolean) = actions.add(IterativeAutoAction(block))
+    fun action(block: IterativeAutoAction) = actions.add(block)
     fun actionComplete(block: () -> Unit) = actionCompletedCallbacks.add(block)
     fun allActionsComplete(block: () -> Unit) { endBlock = block }
     fun init(block: () -> Unit) {initBlock = block}

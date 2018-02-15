@@ -33,26 +33,38 @@ object Config {
         const val kHeadingF = 0.05
     }
 
-    object Manipulator {
-        const val motorID = 0
-        const val sensorID = 0
-        const val kP = 0.0
-        const val kI = 0.0
-        const val kD = 0.0
-    }
-
     object Lifter {
-        const val motorID = 0
-        const val barMotorID = 1
-
-        const val sensorID = 0
+        const val masterID = 4
+        const val slaveID = 5
+        const val barMotorID = 2
 
         const val barDownLimitSwitchID = 0
         const val barUpLimitSwitchID = 1
+        const val elevatorFullLow = 2
+        const val elevatorFullHigh = 3
 
         const val kP = 1.0
         const val kI = 0.0
         const val kD = 0.0
+    }
+
+    object Grabber {
+        abstract class Motor {
+            abstract val id: Int
+            abstract val pdpChannel: Int
+            abstract val peakCurrent: Double
+        }
+        object Left : Motor() {
+            override val id = 0
+            override val pdpChannel = 0
+            override val peakCurrent = 30.0
+        }
+
+        object Right : Motor() {
+            override val id = 1
+            override val pdpChannel = 1
+            override val peakCurrent = 30.0
+        }
     }
 
     object PathFollowing {
@@ -62,12 +74,18 @@ object Config {
         const val completionTolerance = 0.25
         const val maxVelocity = 100.0
 
-        val waypointsFile = javaClass.classLoader.getResource("waypoints.json")!!
+        val waypointsFile: String = javaClass.classLoader.getResource("waypoints.json")!!.file
     }
 
     object Controls {
         const val leftJoystickID = 0
         const val rightJoystickID = 1
+        const val codriverJoystickID = 2
+
+        const val lifterUpButton = 1
+        const val grabberInButton = 2
+        const val lifterDownButton = 3
+        const val grabberOutButton = 4
     }
 
     object Camera {
