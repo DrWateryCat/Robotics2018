@@ -3,6 +3,7 @@ package frc.team2186.robot
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.IterativeRobot
 import edu.wpi.first.wpilibj.Joystick
+import edu.wpi.first.wpilibj.PowerDistributionPanel
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import frc.team2186.robot.common.RobotPosition
@@ -12,7 +13,6 @@ import frc.team2186.robot.common.SwitchState
 import frc.team2186.robot.lib.interfaces.AutonomousMode
 import frc.team2186.robot.lib.odometry.Kinematics
 import frc.team2186.robot.subsystems.*
-import frc.team2186.robot.subsystems.Lifter.set
 import org.reflections.Reflections
 
 class Robot : IterativeRobot() {
@@ -27,16 +27,16 @@ class Robot : IterativeRobot() {
             Drive,
             DashboardUpdater,
             RobotPoseEstimator,
-            Grabber,
-            Lifter
+            Lifter.INSTANCE,
+            Grabber.getInstance()
     )
 
     override fun robotInit() {
         Drive
         DashboardUpdater
         RobotPoseEstimator
-        Grabber
-        Lifter
+        Lifter.INSTANCE
+        Grabber.getInstance()
         //Camera
 
         Kinematics.apply {
@@ -76,7 +76,6 @@ class Robot : IterativeRobot() {
 
     override fun autonomousInit() {
         updateSwitchScale()
-        Lifter.usePID = true
         autoChooser?.selected?.init() ?: println("Attempted to initialize the selected autonomous, but it was null!")
 
         CurrentMode = RobotState.AUTONOMOUS
@@ -88,7 +87,6 @@ class Robot : IterativeRobot() {
 
     override fun teleopInit() {
         CurrentMode = RobotState.TELEOP
-        Lifter.usePID = false
     }
 
     override fun teleopPeriodic() {
@@ -96,32 +94,17 @@ class Robot : IterativeRobot() {
             Drive.leftSetpoint = leftJoystick.getRawAxis(1)
             Drive.rightSetpoint = rightJoystick.getRawAxis(1)
         }
-        Lifter.accessSync {
-            when {
-                codriver.getRawButton(Config.Controls.lifterUpButton) -> {
-                    set(0.25)
-                }
-                codriver.getRawButton(Config.Controls.lifterDownButton) -> {
-                    set(-0.25)
-                }
-                else -> {
-                    set(0.0)
-                }
+        Lifter.INSTANCE.set(when {
+            codriver.getRawButton(Config.Controls.lifterUpButton) -> {
+                0.25
             }
-        }
-        Grabber.accessSync {
-            when {
-                codriver.getRawButton(Config.Controls.grabberInButton) -> {
-                    Grabber.value = 0.5
-                }
-                codriver.getRawButton(Config.Controls.grabberOutButton) -> {
-                    Grabber.value = -0.5
-                }
-                else -> {
-                    Grabber.value = 0.0
-                }
+            codriver.getRawButton(Config.Controls.lifterDownButton) -> {
+                -0.25
             }
-        }
+            else -> {
+                0.0
+            }
+        })
         subsystems.forEach {
             it.update()
         }
@@ -160,5 +143,7 @@ class Robot : IterativeRobot() {
         var StartingSwitch = SwitchState.LEFT
         var StartingScale = ScaleState.LEFT
         var StartingPosition = RobotPosition.LEFT
+
+        val pdp = PowerDistributionPanel(20)
     }
 }
