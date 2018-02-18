@@ -99,6 +99,14 @@ object Drive : Subsystem(){
     val gyroAngle: Rotation2D
         get() = Rotation2D.fromDegrees(gyro.yaw.toDouble())
 
+    @get:Synchronized
+    val compassAngle: Rotation2D
+        get() = Rotation2D.fromDegrees(gyro.compassHeading.toDouble())
+
+    @get:Synchronized
+    val fusedHeading: Rotation2D
+        get() = Rotation2D.fromDegrees(gyro.fusedHeading.toDouble())
+
     @set:Synchronized
     var leftSetpoint: Double = 0.0
 
