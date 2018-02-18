@@ -15,6 +15,8 @@ import frc.team2186.robot.lib.interfaces.Subsystem
 import frc.team2186.robot.lib.math.InterpolatingDouble
 import frc.team2186.robot.lib.math.InterpolatingTreeMap
 import frc.team2186.robot.lib.math.Rotation2D
+import frc.team2186.robot.lib.networking.EasyNetworkTable
+import frc.team2186.robot.lib.odometry.FramesOfReference
 import java.io.File
 import kotlin.math.PI
 
@@ -27,7 +29,9 @@ object Drive : Subsystem(){
         config_kI(0, Config.Drive.kLeftI, 0)
         config_kD(0, Config.Drive.kLeftD, 0)
         config_kF(0, Config.Drive.kLeftF, 0)
+        enableVoltageCompensation(true)
     } + CANVictor(Config.Drive.leftSlaveID).apply {
+        enableVoltageCompensation(true)
     }
 
     private val rightSide = CANTalon(Config.Drive.rightMasterID).apply {
@@ -36,7 +40,9 @@ object Drive : Subsystem(){
         config_kI(0, Config.Drive.kRightI, 0)
         config_kD(0, Config.Drive.kRightD, 0)
         config_kF(0, Config.Drive.kRightF, 0)
+        enableVoltageCompensation(true)
     } + CANVictor(Config.Drive.rightSlaveID).apply {
+        enableVoltageCompensation(true)
     }
 
     private val pidInterface = PIDInput {
@@ -54,8 +60,7 @@ object Drive : Subsystem(){
     private var recordingFile: File? = null
     private var startTime = 0.0
 
-    @set:Synchronized
-    private var deltaV = 0.0
+    private val networkTable = EasyNetworkTable("/drive")
 
     @set:Synchronized
     var useGyro = true
@@ -210,6 +215,22 @@ object Drive : Subsystem(){
 
                 leftSide.set(if (useVelocityPid) ControlMode.Velocity else ControlMode.PercentOutput, -command.left)
                 rightSide.set(if (useVelocityPid) ControlMode.Velocity else ControlMode.PercentOutput, command.right)
+            }
+        }
+
+        networkTable.apply {
+            putNumber("heading", gyroAngle.degrees)
+            putNumber("left_setpoint", leftSetpoint)
+            putNumber("right_setpoint", rightSetpoint)
+            putNumber("left_velocity", leftVelocity)
+            putNumber("right_velocity", rightVelocity)
+            putNumber("left_position", leftPosition)
+            putNumber("right_position", rightPosition)
+            putNumber("left_error", leftSide.getClosedLoopError(0))
+            putNumber("right_error", rightSide.getClosedLoopError(0))
+            FramesOfReference.latestFieldToVehicle().value.trans.apply {
+                putNumber("x_coord", x)
+                putNumber("y_coord", y)
             }
         }
     }

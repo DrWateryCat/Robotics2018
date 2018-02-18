@@ -1,6 +1,5 @@
 package frc.team2186.robot.lib.networking
 
-import edu.wpi.first.networktables.NetworkTable
 import edu.wpi.first.networktables.NetworkTableInstance
 
 class EasyNetworkTable (path: String){
@@ -28,6 +27,12 @@ class EasyNetworkTable (path: String){
     @Synchronized
     fun putNumber(key: String, value: Number) {
         this += Data(key, value)
+    }
+
+    @Synchronized
+    fun putBoolean(key: String, value: Boolean, default: Boolean = false) {
+        getEntry(key).setValue(value)
+        getEntry(key).setDefaultBoolean(default)
     }
 
     @Synchronized

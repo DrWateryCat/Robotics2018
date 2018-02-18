@@ -6,22 +6,25 @@ import edu.wpi.first.wpilibj.Joystick
 import edu.wpi.first.wpilibj.PowerDistributionPanel
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
+import frc.team2186.robot.autonomous.*
 import frc.team2186.robot.common.RobotPosition
 import frc.team2186.robot.common.RobotState
 import frc.team2186.robot.common.ScaleState
 import frc.team2186.robot.common.SwitchState
 import frc.team2186.robot.lib.interfaces.AutonomousMode
+import frc.team2186.robot.lib.networking.EasyNetworkTable
 import frc.team2186.robot.lib.odometry.Kinematics
 import frc.team2186.robot.subsystems.*
-import org.reflections.Reflections
 
 class Robot : IterativeRobot() {
-    var autoChooser: SendableChooser<AutonomousMode>? = null
+    var autoChooser = SendableChooser<AutonomousMode>()
     val positionChooser = SendableChooser<RobotPosition>()
 
     val leftJoystick = Joystick(Config.Controls.leftJoystickID)
     val rightJoystick = Joystick(Config.Controls.rightJoystickID)
     val codriver = Joystick(Config.Controls.codriverJoystickID)
+
+    val networkTable = EasyNetworkTable("/robot")
 
     val subsystems = arrayListOf(
             Drive,
@@ -44,23 +47,12 @@ class Robot : IterativeRobot() {
             effectiveWheelDiameter = Config.Drive.effectiveWheelDiameter
             trackScrubFactor = Config.Drive.trackScrubFactor
         }
-        autoChooser = SendableChooser()
-
-        autoChooser?.apply {
-            try {
-                Reflections("frc.team2186.robot.autonomous").getSubTypesOf(AutonomousMode::class.java).forEach { it ->
-                    val c = it.newInstance()
-                    if (c.default) {
-                        addDefault(c.name, c)
-                    } else {
-                        addObject(c.name, c)
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                println("Disabling autonomous.")
-                autoChooser = null
-            }
+        autoChooser.apply {
+            addDefault("Do Nothing", DoNothing())
+            addObject("Baseline", BaselineJava())
+            addObject("Play auto", PlayAuto())
+            addObject("Switch", Switch())
+            addObject("Tune PID", TunePID())
         }
 
         SmartDashboard.putData("autonomous", autoChooser)
@@ -71,19 +63,22 @@ class Robot : IterativeRobot() {
             addObject("Right", RobotPosition.RIGHT)
         }
 
-        SmartDashboard.putData("Robot Position", positionChooser)
+        SmartDashboard.putData("position", positionChooser)
     }
 
     override fun autonomousInit() {
         updateSwitchScale()
-        autoChooser?.selected?.init() ?: println("Attempted to initialize the selected autonomous, but it was null!")
+        autoChooser.selected?.init() ?: println("Attempted to initialize the selected autonomous, but it was null!")
 
         CurrentMode = RobotState.AUTONOMOUS
     }
 
     override fun autonomousPeriodic() {
-        //autoChooser?.selected?.update()
-        SmartDashboard.putString("current_auto", autoChooser?.selected?.name ?: "None")
+        autoChooser.selected?.update()
+        SmartDashboard.putString("current_auto", autoChooser.selected?.name ?: "None")
+        networkTable.apply {
+            putNumber("time", DriverStation.getInstance().matchTime.toInt())
+        }
     }
 
     override fun teleopInit() {
@@ -108,6 +103,10 @@ class Robot : IterativeRobot() {
         Lifter.setpoint = codriver.getRawAxis(1)
         subsystems.forEach {
             it.update()
+        }
+
+        networkTable.apply {
+            putNumber("time", DriverStation.getInstance().matchTime.toInt())
         }
     }
 

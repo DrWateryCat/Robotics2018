@@ -5,11 +5,14 @@ import edu.wpi.first.wpilibj.VictorSP
 import frc.team2186.robot.Config
 import frc.team2186.robot.lib.common.IterativeAutoAction
 import frc.team2186.robot.lib.interfaces.Subsystem
+import frc.team2186.robot.lib.networking.EasyNetworkTable
 
 object Platform : Subsystem() {
     private val motor = VictorSP(Config.Platform.motorID)
     private val barDown = DigitalInput(Config.Platform.barDownSwitch)
     private val barUp = DigitalInput(Config.Platform.barUpSwitch)
+
+    private val networkTable = EasyNetworkTable("/platform")
 
     var setpoint = 0.0
 
@@ -20,9 +23,8 @@ object Platform : Subsystem() {
         get() = barUp.get()
 
     fun barUp() = IterativeAutoAction {
-            setpoint = 0.25
-
-            isBarUp
+        setpoint = 0.25
+        isBarUp
     }
 
     fun barDown() = IterativeAutoAction {
@@ -37,5 +39,9 @@ object Platform : Subsystem() {
             isBarUp.not() or (setpoint <= 0.0) -> setpoint
             else -> 0.0
         })
+
+        networkTable.apply {
+            putBoolean("barUp", isBarUp, false)
+        }
     }
 }
