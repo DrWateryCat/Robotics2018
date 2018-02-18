@@ -190,6 +190,8 @@ object Drive : Subsystem(){
         rightSide.stopMotor()
     }
 
+    private fun convertToNative(d: DriveData) = DriveData(inchesPerSecondToTicks(d.left), inchesPerSecondToTicks(d.right))
+
     private fun updateVelocityHeading(): DriveData {
         val gyroVal = gyroSetpoint.rotateBy(gyroAngle.inverse()).degrees
         val delta = velocityHeadingPID.calculate(gyroVal)
@@ -197,13 +199,13 @@ object Drive : Subsystem(){
     }
 
     override fun update() {
-        when {
-            Robot.CurrentMode == RobotState.DISABLED -> {
+        when (Robot.CurrentMode){
+            RobotState.DISABLED -> {
                 leftSide.set(ControlMode.PercentOutput, 0.0)
                 rightSide.set(ControlMode.PercentOutput, 0.0)
             }
 
-            Robot.CurrentMode == RobotState.TELEOP -> {
+            RobotState.TELEOP -> {
                 leftSide.set(ControlMode.PercentOutput, -leftSetpoint)
                 rightSide.set(ControlMode.PercentOutput, rightSetpoint)
 
@@ -212,11 +214,11 @@ object Drive : Subsystem(){
                 }
             }
 
-            Robot.CurrentMode == RobotState.AUTONOMOUS -> {
+            RobotState.AUTONOMOUS -> {
                 val command = when {
                     useVelocityPid -> {
                         val ips = updateVelocityHeading()
-                        DriveData(inchesPerSecondToTicks(ips.left), inchesPerSecondToTicks(ips.right))
+                        convertToNative(ips)
                     }
                     else -> DriveData(leftSetpoint, rightSetpoint)
                 }
