@@ -4,26 +4,19 @@ import com.ctre.phoenix.motorcontrol.ControlMode
 import com.ctre.phoenix.motorcontrol.FeedbackDevice
 import com.google.gson.JsonObject
 import com.kauailabs.navx.frc.AHRS
-import edu.wpi.first.wpilibj.*
+import edu.wpi.first.wpilibj.SPI
 import edu.wpi.first.wpilibj.Timer
-import frc.team2186.robot.lib.interfaces.Subsystem
 import frc.team2186.robot.Config
 import frc.team2186.robot.Robot
 import frc.team2186.robot.common.RobotState
+import frc.team2186.robot.common.SynchronousPID
 import frc.team2186.robot.lib.common.*
-import frc.team2186.robot.lib.interfaces.Interpolable
+import frc.team2186.robot.lib.interfaces.Subsystem
 import frc.team2186.robot.lib.math.InterpolatingDouble
 import frc.team2186.robot.lib.math.InterpolatingTreeMap
 import frc.team2186.robot.lib.math.Rotation2D
-import frc.team2186.robot.lib.odometry.FramesOfReference
-import frc.team2186.robot.lib.odometry.Kinematics
-import frc.team2186.robot.lib.pathfinding.Path
-import frc.team2186.robot.lib.pathfinding.PurePursuitController
 import java.io.File
-import java.util.*
 import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.max
 
 object Drive : Subsystem(){
     private data class DriveData(val left: Double, val right: Double)
@@ -50,21 +43,16 @@ object Drive : Subsystem(){
         gyroSetpoint.rotateBy(gyroAngle.inverse()).degrees
     }
 
-    private val gyro = AHRS(SerialPort.Port.kMXP)
-    private val velocityHeadingPID = PIDController(Config.Drive.kHeadingP,
-                                                   Config.Drive.kHeadingI,
-                                                   Config.Drive.kHeadingD,
-                                                   pidInterface,
-                                                   PIDOutput {
-        deltaV = it
-    })
+    private val gyro = AHRS(SPI.Port.kMXP)
+    private val velocityHeadingPID = SynchronousPID(
+            Config.Drive.kHeadingP,
+            Config.Drive.kHeadingI,
+            Config.Drive.kHeadingD
+    )
 
-    private lateinit var ppController: PurePursuitController
     private val recording = InterpolatingTreeMap<InterpolatingDouble, InterpolatingPair>()
     private var recordingFile: File? = null
     private var startTime = 0.0
-
-    private var followingPath = false
 
     @set:Synchronized
     private var deltaV = 0.0
@@ -106,10 +94,6 @@ object Drive : Subsystem(){
     val gyroAngle: Rotation2D
         get() = Rotation2D.fromDegrees(gyro.yaw.toDouble())
 
-    @get:Synchronized
-    val finishedPath
-        get() = ppController.isDone
-
     @set:Synchronized
     var leftSetpoint: Double = 0.0
 
@@ -118,14 +102,6 @@ object Drive : Subsystem(){
 
     @set:Synchronized
     var gyroSetpoint: Rotation2D = Rotation2D.fromDegrees(0.0)
-
-    override val json get() = JsonObject().apply {
-        addProperty("left_velocity", leftVelocity)
-        addProperty("right_velocity", rightVelocity)
-        addProperty("left_setpoint", leftSetpoint)
-        addProperty("right_setpoint", rightSetpoint)
-        addProperty("current_gyro", gyroAngle.degrees)
-    }
 
     fun inchesPerSecondToRPM(ips: Double): Double = ips * 60 / (Config.Drive.wheelDiameter * PI)
     fun rpmToTicks(rpm: Double): Double = rpmToNative(rpm)
@@ -201,38 +177,10 @@ object Drive : Subsystem(){
         rightSide.stopMotor()
     }
 
-    @Synchronized
-    fun followPath(path: Path, reversed: Boolean = false) {
-        ppController = PurePursuitController(
-                Config.PathFollowing.fixedLookahead,
-                Config.PathFollowing.maxAccel,
-                Config.PathFollowing.nominalDt,
-                path,
-                reversed,
-                Config.PathFollowing.completionTolerance
-        )
-
-        followingPath = true
-    }
-
-    private fun updateVelocityHeading() = DriveData(leftSetpoint + deltaV / 2, rightSetpoint + deltaV / 2)
-
-    private fun updatePathFollower(): DriveData {
-        val currentPose = FramesOfReference.latestFieldToVehicle().value
-        val command = ppController.update(currentPose, Timer.getFPGATimestamp())
-
-        var setpoint = Kinematics.inverseKinematics(command)
-
-        var maxVel = 0.0
-        maxVel = max(maxVel, abs(setpoint.left))
-        maxVel = max(maxVel, abs(setpoint.right))
-
-        if (maxVel > Config.PathFollowing.maxVelocity) {
-            val scaling = Config.PathFollowing.maxVelocity / maxVel
-            setpoint = Kinematics.DriveVelocity(setpoint.left * scaling, setpoint.right * scaling)
-        }
-
-        return DriveData(setpoint.left, setpoint.right)
+    private fun updateVelocityHeading(): DriveData {
+        val gyroVal = gyroSetpoint.rotateBy(gyroAngle.inverse()).degrees
+        val delta = velocityHeadingPID.calculate(gyroVal)
+        return DriveData(leftSetpoint + delta / 2, rightSetpoint - delta / 2)
     }
 
     override fun update() {
@@ -253,14 +201,9 @@ object Drive : Subsystem(){
 
             Robot.CurrentMode == RobotState.AUTONOMOUS -> {
                 val command = when {
-                    useGyro.not() -> DriveData(leftSetpoint, rightSetpoint)
-                    followingPath -> {
-                        if (finishedPath)
-                            followingPath = false
-                        updatePathFollower()
-                    }
                     useVelocityPid -> {
-                        updateVelocityHeading()
+                        val ips = updateVelocityHeading()
+                        DriveData(inchesPerSecondToTicks(ips.left), inchesPerSecondToTicks(ips.right))
                     }
                     else -> DriveData(leftSetpoint, rightSetpoint)
                 }

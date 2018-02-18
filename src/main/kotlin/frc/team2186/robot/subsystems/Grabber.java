@@ -1,10 +1,8 @@
 package frc.team2186.robot.subsystems;
 
-import com.google.gson.JsonObject;
 import frc.team2186.robot.Config;
 import frc.team2186.robot.common.Motor;
 import frc.team2186.robot.lib.interfaces.Subsystem;
-import org.jetbrains.annotations.NotNull;
 
 public class Grabber extends Subsystem {
     private static Grabber INSTANCE = new Grabber();
@@ -38,15 +36,5 @@ public class Grabber extends Subsystem {
     public void update() {
         left.set(setpoint);
         right.set(setpoint);
-    }
-
-    @NotNull
-    @Override
-    public JsonObject getJson() {
-        JsonObject ret = new JsonObject();
-        ret.addProperty("setpoint", this.setpoint);
-        ret.addProperty("has_box", hasBox());
-
-        return ret;
     }
 }

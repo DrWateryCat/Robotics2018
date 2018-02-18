@@ -29,8 +29,7 @@ object Lights : Subsystem() {
             field = value
         }
 
-    override val json: JsonObject
-        @Synchronized
+    private val json: JsonObject
         get() = JsonObject().apply {
             addProperty("animation", when(animation) {
                 Animations.RAINBOW -> 0

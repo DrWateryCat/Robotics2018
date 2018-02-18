@@ -1,7 +1,5 @@
 package frc.team2186.robot
 
-import java.io.File
-
 object Config {
     object Drive {
         const val leftMasterID = 0
@@ -33,19 +31,11 @@ object Config {
         const val kHeadingF = 0.05
     }
 
-    object Lifter {
-        const val masterID = 4
-        const val slaveID = 5
-        const val barMotorID = 2
-
-        const val barDownLimitSwitchID = 0
-        const val barUpLimitSwitchID = 1
-        const val elevatorFullLow = 2
-        const val elevatorFullHigh = 3
-
-        const val kP = 1.0
-        const val kI = 0.0
-        const val kD = 0.0
+    object Platform {
+        const val lifterID = 3
+        const val motorID = 2
+        const val barDownSwitch = 0
+        const val barUpSwitch = 1
     }
 
     object Grabber {
@@ -91,5 +81,9 @@ object Config {
     object Camera {
         const val cameraID = 0
         const val cameraPort = 5801
+    }
+
+    object Auto {
+        const val speed = 20.0
     }
 }

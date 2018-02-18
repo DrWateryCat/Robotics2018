@@ -25,18 +25,18 @@ class Robot : IterativeRobot() {
 
     val subsystems = arrayListOf(
             Drive,
-            DashboardUpdater,
             RobotPoseEstimator,
-            Lifter.INSTANCE,
-            Grabber.getInstance()
+            Grabber.getInstance(),
+            Platform,
+            Lifter
     )
 
     override fun robotInit() {
         Drive
-        DashboardUpdater
         RobotPoseEstimator
-        Lifter.INSTANCE
+        Platform
         Grabber.getInstance()
+        Lifter
         //Camera
 
         Kinematics.apply {
@@ -82,7 +82,8 @@ class Robot : IterativeRobot() {
     }
 
     override fun autonomousPeriodic() {
-        autoChooser?.selected?.update()
+        //autoChooser?.selected?.update()
+        SmartDashboard.putString("current_auto", autoChooser?.selected?.name ?: "None")
     }
 
     override fun teleopInit() {
@@ -94,17 +95,17 @@ class Robot : IterativeRobot() {
             Drive.leftSetpoint = leftJoystick.getRawAxis(1)
             Drive.rightSetpoint = rightJoystick.getRawAxis(1)
         }
-        Lifter.INSTANCE.set(when {
-            codriver.getRawButton(Config.Controls.lifterUpButton) -> {
-                0.25
-            }
-            codriver.getRawButton(Config.Controls.lifterDownButton) -> {
-                -0.25
-            }
-            else -> {
-                0.0
-            }
-        })
+        Platform.setpoint = when {
+            codriver.getRawButton(Config.Controls.lifterUpButton) -> 0.25
+            codriver.getRawButton(Config.Controls.lifterDownButton) -> -0.25
+            else -> 0.0
+        }
+        Grabber.getInstance().setpoint = when {
+            codriver.getRawButton(Config.Controls.grabberInButton) -> -0.25
+            codriver.getRawButton(Config.Controls.grabberOutButton) -> 0.25
+            else -> 0.0
+        }
+        Lifter.setpoint = codriver.getRawAxis(1)
         subsystems.forEach {
             it.update()
         }
