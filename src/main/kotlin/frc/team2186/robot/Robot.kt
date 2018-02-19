@@ -29,7 +29,7 @@ class Robot : IterativeRobot() {
     val subsystems = arrayListOf(
             Drive,
             RobotPoseEstimator,
-            Grabber.getInstance(),
+            Grabber,
             Platform,
             Lifter
     )
@@ -38,9 +38,9 @@ class Robot : IterativeRobot() {
         Drive
         RobotPoseEstimator
         Platform
-        Grabber.getInstance()
+        Grabber
         Lifter
-        //Camera
+        Camera
 
         Kinematics.apply {
             wheelDiameter = Config.Drive.wheelDiameter
@@ -91,11 +91,11 @@ class Robot : IterativeRobot() {
             Drive.rightSetpoint = rightJoystick.getRawAxis(1)
         }
         Platform.setpoint = when {
-            codriver.getRawButton(Config.Controls.lifterUpButton) -> 0.25
-            codriver.getRawButton(Config.Controls.lifterDownButton) -> -0.25
+            codriver.getRawButton(Config.Controls.lifterUpButton) -> 0.5
+            codriver.getRawButton(Config.Controls.lifterDownButton) -> -0.5
             else -> 0.0
         }
-        Grabber.getInstance().setpoint = when {
+        Grabber.setpoint = when {
             codriver.getRawButton(Config.Controls.grabberInButton) -> -0.25
             codriver.getRawButton(Config.Controls.grabberOutButton) -> 0.25
             else -> 0.0

@@ -32,8 +32,9 @@ object Config {
     }
 
     object Platform {
-        const val lifterID = 3
-        const val motorID = 2
+        const val lifterMaster = 3
+        const val lifterSlave = 4
+        const val motorID = 1
         const val barDownSwitch = 0
         const val barUpSwitch = 1
     }
@@ -51,7 +52,7 @@ object Config {
         }
 
         object Right : Motor() {
-            override val id = 1
+            override val id = 5
             override val pdpChannel = 1
             override val peakCurrent = 30.0
         }
@@ -72,10 +73,10 @@ object Config {
         const val rightJoystickID = 1
         const val codriverJoystickID = 2
 
-        const val lifterUpButton = 1
-        const val grabberInButton = 2
-        const val lifterDownButton = 3
-        const val grabberOutButton = 4
+        const val lifterUpButton = 3
+        const val grabberInButton = 4
+        const val lifterDownButton = 1
+        const val grabberOutButton = 2
     }
 
     object Camera {

@@ -6,6 +6,7 @@ import com.google.gson.JsonObject
 import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.SPI
 import edu.wpi.first.wpilibj.Timer
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import frc.team2186.robot.Config
 import frc.team2186.robot.Robot
 import frc.team2186.robot.common.RobotState
@@ -126,6 +127,8 @@ object Drive : Subsystem(){
 
     init {
         velocityHeadingPID.setOutputRange(-30.0, 30.0)
+        SmartDashboard.putData(leftSide)
+        SmartDashboard.putData(rightSide)
     }
 
     fun ticksToInches(ticks: Double): Double {
