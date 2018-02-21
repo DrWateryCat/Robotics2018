@@ -35,12 +35,8 @@ class Robot : IterativeRobot() {
     )
 
     override fun robotInit() {
+        println("Intializing")
         Drive
-        RobotPoseEstimator
-        Platform
-        Grabber
-        Lifter
-        Camera
 
         Kinematics.apply {
             wheelDiameter = Config.Drive.wheelDiameter
@@ -53,6 +49,7 @@ class Robot : IterativeRobot() {
             addObject("Play auto", PlayAuto())
             addObject("Switch", Switch())
             addObject("Tune PID", TunePID())
+            addObject("Time test", TimeTest())
         }
 
         SmartDashboard.putData("autonomous", autoChooser)
@@ -68,21 +65,28 @@ class Robot : IterativeRobot() {
 
     override fun autonomousInit() {
         updateSwitchScale()
-        autoChooser.selected?.init() ?: println("Attempted to initialize the selected autonomous, but it was null!")
+        autoChooser.selected.init()
 
         CurrentMode = RobotState.AUTONOMOUS
+        Drive.inAuto = true
+        Drive.reset()
+        println(CurrentMode)
     }
 
     override fun autonomousPeriodic() {
-        autoChooser.selected?.update()
-        SmartDashboard.putString("current_auto", autoChooser.selected?.name ?: "None")
-        networkTable.apply {
-            putNumber("time", DriverStation.getInstance().matchTime.toInt())
+        if (autoChooser.selected.done().not()) {
+            autoChooser.selected.update()
+        }
+
+        subsystems.forEach {
+            it.update()
         }
     }
 
     override fun teleopInit() {
         CurrentMode = RobotState.TELEOP
+        Drive.inAuto = false
+        Drive.reset()
     }
 
     override fun teleopPeriodic() {
@@ -91,13 +95,13 @@ class Robot : IterativeRobot() {
             Drive.rightSetpoint = rightJoystick.getRawAxis(1)
         }
         Platform.setpoint = when {
-            codriver.getRawButton(Config.Controls.lifterUpButton) -> 0.5
-            codriver.getRawButton(Config.Controls.lifterDownButton) -> -0.5
+            leftJoystick.getRawButton(Config.Controls.lifterUpButton) -> -0.5
+            rightJoystick.getRawButton(Config.Controls.lifterUpButton) -> -0.5
             else -> 0.0
         }
         Grabber.setpoint = when {
-            codriver.getRawButton(Config.Controls.grabberInButton) -> -0.25
-            codriver.getRawButton(Config.Controls.grabberOutButton) -> 0.25
+            leftJoystick.getRawButton(Config.Controls.grabberButton) -> -0.25
+            rightJoystick.getRawButton(Config.Controls.grabberButton) -> 0.25
             else -> 0.0
         }
         Lifter.setpoint = codriver.getRawAxis(1)
@@ -112,9 +116,13 @@ class Robot : IterativeRobot() {
 
     override fun disabledInit() {
         CurrentMode = RobotState.DISABLED
+        Drive.inAuto = false
     }
 
     override fun disabledPeriodic() {
+        subsystems.forEach {
+            it.update()
+        }
     }
 
     fun updateSwitchScale() {

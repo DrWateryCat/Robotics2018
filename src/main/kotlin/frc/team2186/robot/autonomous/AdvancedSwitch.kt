@@ -16,35 +16,35 @@ class AdvancedSwitch : SequentialAutonomousMode("Advanced Switch", false) {
         when (Robot.StartingPosition) {
             RobotPosition.LEFT -> {
                 if (Robot.StartingSwitch === SwitchState.RIGHT) {
-                    heading90()
-                    crossBoard(false)
-                    heading270()
-                    baseline(false)
-                    dropBox()
+                    action(heading90())
+                    action(crossBoard(false))
+                    action(heading270())
+                    action(baseline(false))
+                    action(dropBox())
                 }
             }
             RobotPosition.MIDDLE -> {
                 if (Robot.StartingSwitch === SwitchState.LEFT) {
-                    heading270()
-                    crossBoard(true)
-                    heading90()
-                    baseline(false)
-                    dropBox()
+                    action(heading270())
+                    action(crossBoard(true))
+                    action(heading90())
+                    action(baseline(false))
+                    action(dropBox())
                 } else {
-                    heading90()
-                    crossBoard(true)
-                    heading270()
-                    baseline(false)
-                    dropBox()
+                    action(heading90())
+                    action(crossBoard(true))
+                    action(heading270())
+                    action(baseline(false))
+                    action(dropBox())
                 }
             }
             RobotPosition.RIGHT -> {
                 if (Robot.StartingSwitch === SwitchState.LEFT) {
-                    heading270()
-                    crossBoard(false)
-                    heading90()
-                    baseline(false)
-                    dropBox()
+                    action(heading270())
+                    action(crossBoard(false))
+                    action(heading90())
+                    action(baseline(false))
+                    action(dropBox())
                 }
             }
         }

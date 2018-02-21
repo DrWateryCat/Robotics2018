@@ -9,5 +9,6 @@ abstract class AutonomousMode (val name: String, val default: Boolean = false){
     abstract fun done(): Boolean
 
     val initialTime: Double by lazy { Timer.getFPGATimestamp() }
-    var deltaTime = Timer.getFPGATimestamp() - initialTime
+    var deltaTime: Double = 0.0
+            get() = Timer.getFPGATimestamp() - initialTime
 }

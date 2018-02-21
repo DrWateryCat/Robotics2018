@@ -18,44 +18,44 @@ class Switch : SequentialAutonomousMode("Switch", false) {
         when (Robot.StartingPosition) {
             RobotPosition.LEFT -> {
                 if (Robot.StartingSwitch === SwitchState.LEFT) {
-                    baseline(false)
-                    dropBox()
+                    action(baseline(false))
+                    action(dropBox())
                 } else {
-                    moveOne()
-                    heading90()
-                    crossBoard(false)
-                    heading270()
-                    moveTwo()
-                    dropBox()
+                    action(moveOne())
+                    action(heading90())
+                    action(crossBoard(false))
+                    action(heading270())
+                    action(moveTwo())
+                    action(dropBox())
                 }
             }
             RobotPosition.MIDDLE -> {
                 if (Robot.StartingSwitch === SwitchState.LEFT) {
-                    moveOne()
-                    heading270()
-                    crossBoard(true)
-                    heading90()
-                    moveTwo()
-                    dropBox()
+                    action(moveOne())
+                    action(heading270())
+                    action(crossBoard(true))
+                    action(heading90())
+                    action(moveTwo())
+                    action(dropBox())
                 } else {
-                    moveOne()
-                    heading90()
-                    crossBoard(true)
-                    moveTwo()
-                    dropBox()
+                    action(moveOne())
+                    action(heading90())
+                    action(crossBoard(true))
+                    action(moveTwo())
+                    action(dropBox())
                 }
             }
             RobotPosition.RIGHT -> {
                 if (Robot.StartingSwitch === SwitchState.LEFT) {
-                    moveOne()
-                    heading270()
-                    crossBoard(false)
-                    heading90()
-                    moveTwo()
-                    dropBox()
+                    action(moveOne())
+                    action(heading270())
+                    action(crossBoard(false))
+                    action(heading90())
+                    action(moveTwo())
+                    action(dropBox())
                 } else {
-                    baseline(false)
-                    dropBox()
+                    action(baseline(false))
+                    action(dropBox())
                 }
             }
         }

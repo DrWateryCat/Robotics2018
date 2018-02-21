@@ -12,23 +12,23 @@ object Config {
         const val trackScrubFactor: Double = 0.5
         const val effectiveWheelDiameter = (wheelDiameter * wheelDiameter + wheelBaseLength * wheelBaseLength) / wheelBaseLength
 
-        const val ticksPerRevolution = 1440.0 * 4
+        const val ticksPerRevolution = 1440.0
         const val ticksPer100ms = ticksPerRevolution / 600
 
-        const val kLeftP = 1.0
+        const val kLeftP = 0.525
         const val kLeftI = 0.0
-        const val kLeftD = 0.0
+        const val kLeftD = 0.425
         const val kLeftF = 0.05
 
-        const val kRightP = 1.0
+        const val kRightP = 0.75
         const val kRightI = 0.0
-        const val kRightD = 0.0
-        const val kRightF = 0.05
+        const val kRightD = 0.45
+        const val kRightF = 0.3
 
-        const val kHeadingP = 1.0
+        const val kHeadingP = 0.1
         const val kHeadingI = 0.0
         const val kHeadingD = 0.0
-        const val kHeadingF = 0.05
+        const val kHeadingF = 0.0
     }
 
     object Platform {
@@ -74,9 +74,9 @@ object Config {
         const val codriverJoystickID = 2
 
         const val lifterUpButton = 3
-        const val grabberInButton = 4
-        const val lifterDownButton = 1
-        const val grabberOutButton = 2
+        const val grabberButton = 1
+
+        const val invertButton = 11
     }
 
     object Camera {

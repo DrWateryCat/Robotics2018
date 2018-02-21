@@ -5,6 +5,9 @@ import frc.team2186.robot.subsystems.Drive
 
 class TunePID : AutonomousMode("Tuning PID", false) {
     override fun init() {
+        Drive.useVelocityPid = false
+        Drive.useGyro = true
+        println("Initializing")
     }
 
     override fun update() {

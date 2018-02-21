@@ -7,7 +7,10 @@ import frc.team2186.robot.Config
 import frc.team2186.robot.lib.interfaces.Subsystem
 
 object Camera : Subsystem() {
-    private val cam: UsbCamera? = CameraServer.getInstance().startAutomaticCapture(Config.Camera.cameraID)
+    private val cam: UsbCamera? = CameraServer.getInstance().startAutomaticCapture(Config.Camera.cameraID).apply {
+        setResolution(640, 480)
+        setFPS(30)
+    }
     private val server: MjpegServer? = CameraServer.getInstance().addServer("main_camera", Config.Camera.cameraPort).apply {
         source = cam
     }

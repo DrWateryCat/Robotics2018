@@ -2,8 +2,7 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.2.21"
     id "eclipse"
     id "idea"
-    id "jaci.openrio.gradle.GradleRIO" version "2018.01.22"
-    id "java"
+    id "jaci.openrio.gradle.GradleRIO" version "2018.02.17"
 }
 
 def TEAM = 2186

@@ -35,10 +35,15 @@ class SequentialActionRunner(vararg action: IterativeAutoAction) {
 class ActionRunner {
     private val actions = ArrayList<IterativeAutoAction>()
     private val actionCompletedCallbacks = ArrayList<() -> Unit>()
-    private lateinit var initBlock: () -> Unit
-    private lateinit var endBlock: () -> Unit
+    private var initBlock: () -> Unit = {}
+    private var endBlock: () -> Unit = {}
     private var ranEnd = false
-    val done get() = (actions.size > 0).not()
+    var done = false
+        private set(value) {
+            field = value
+        }
+
+    private var currentIndex = 0
 
     fun action(block: () -> Boolean) = actions.add(IterativeAutoAction(block))
     fun action(block: IterativeAutoAction) = actions.add(block)
@@ -51,22 +56,22 @@ class ActionRunner {
     }
 
     fun update() {
-        if (actions[0].done and done.not()) {
-            if (actions.size > 0) {
-                actions.removeAt(0)
-                actionCompletedCallbacks.forEach { cb ->
-                    cb()
+        println("Updating")
+        try {
+            val currentAction = actions[currentIndex]
+            println("Index: $currentIndex")
+            if (currentAction.done.not()) {
+                currentAction.run()
+            } else {
+                currentIndex ++
+                actionCompletedCallbacks.forEach {
+                    it.invoke()
                 }
             }
-        } else {
-            actions[0].run()
-        }
-
-        if (done) {
-            if (ranEnd.not()) {
-                endBlock()
-                ranEnd = true
-            }
+        } catch (e: Exception) {
+            println("Failed: ${e.message}")
+            done = true
+            endBlock.invoke()
         }
     }
 }
@@ -91,4 +96,7 @@ object AutonomousManager {
     }
 }
 
-fun actionRunner(block: ActionRunner.() -> Unit): ActionRunner = ActionRunner().apply(block)
+fun actionRunner(block: ActionRunner.() -> Unit) = ActionRunner().apply {
+    println("Making runner")
+    block()
+}
