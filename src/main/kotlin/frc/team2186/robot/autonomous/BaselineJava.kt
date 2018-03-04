@@ -1,5 +1,8 @@
 package frc.team2186.robot.autonomous
 
+import frc.team2186.robot.Robot
+import frc.team2186.robot.common.RobotPosition
+import frc.team2186.robot.common.SwitchState
 import frc.team2186.robot.lib.common.actionRunner
 import frc.team2186.robot.lib.interfaces.AutonomousMode
 import frc.team2186.robot.lib.math.Rotation2D
@@ -9,28 +12,18 @@ import frc.team2186.robot.subsystems.Platform
 class BaselineJava : AutonomousMode("Baseline in Java", false) {
     val actions = actionRunner {
         action {
-            Drive.gyroSetpoint = Rotation2D.fromDegrees(90.0)
-            Drive.leftSetpoint = 0.15
-            Drive.rightSetpoint = 0.15
-
-            Drive.leftPosition > 100.0
+            Drive.setForwardVelocity(20.0)
+            Drive.leftPosition >= 80.0
         }
-        action {
-            Drive.stop()
-            Platform.setpoint = -0.5
-
-            deltaTime > 0.5
-        }
-        action {
-            Platform.setpoint = 0.0
-            true
-        }
-        action {
-            Drive.gyroSetpoint = Rotation2D.fromDegrees(180.0)
-            Drive.leftSetpoint = -0.15
-            Drive.rightSetpoint = 0.15
-
-            Drive.onTarget
+        if (((Robot.StartingSwitch == SwitchState.LEFT) and (Robot.StartingPosition == RobotPosition.LEFT)) or ((Robot.StartingSwitch == SwitchState.RIGHT) and (Robot.StartingPosition == RobotPosition.RIGHT))) {
+            action {
+                Platform.setpoint = -0.5
+                deltaTime >= 1.0
+            }
+            action {
+                Platform.setpoint = 0.0
+                true
+            }
         }
         action {
             Drive.stop()
@@ -40,7 +33,7 @@ class BaselineJava : AutonomousMode("Baseline in Java", false) {
 
     override fun init() {
         Drive.useGyro = true
-        Drive.positionPid = true
+        Drive.positionPid = false
         actions.init()
         println(actions)
     }

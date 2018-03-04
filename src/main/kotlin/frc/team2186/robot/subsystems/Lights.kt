@@ -6,28 +6,10 @@ import frc.team2186.robot.lib.interfaces.Subsystem
 
 object Lights : Subsystem() {
     enum class Animations {
-        RAINBOW, RED_ALLIANCE, BLUE_ALLIANCE, MANUAL
+        RAINBOW, RED_ALLIANCE, BLUE_ALLIANCE
     }
-    var red: Int = 0
-        @Synchronized
-        set(value) {
-            field = value
-        }
-    var green = 0
-        @Synchronized
-        set(value) {
-            field = value
-        }
-    var blue = 0
-        @Synchronized
-        set(value) {
-            field = value
-        }
+    private var lastAnimation = Animations.RAINBOW
     var animation = Animations.RAINBOW
-        @Synchronized
-        set(value) {
-            field = value
-        }
 
     private val json: JsonObject
         get() = JsonObject().apply {
@@ -35,18 +17,15 @@ object Lights : Subsystem() {
                 Animations.RAINBOW -> 0
                 Animations.RED_ALLIANCE -> 1
                 Animations.BLUE_ALLIANCE -> 2
-                Animations.MANUAL -> 3
             })
-            addProperty("red", red)
-            addProperty("green", green)
-            addProperty("blue", blue)
         }
 
-    private val serial = SerialPort(9600, SerialPort.Port.kOnboard).apply {
-        enableTermination('\n')
-    }
+    private val serial = SerialPort(9600, SerialPort.Port.kMXP)
 
     override fun update() {
-        serial.writeString(json.asString)
+        if (lastAnimation != animation) {
+            lastAnimation = animation
+            serial.writeString(json.toString())
+        }
     }
 }

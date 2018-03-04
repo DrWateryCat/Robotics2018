@@ -7,6 +7,7 @@ import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.PIDController
 import edu.wpi.first.wpilibj.SPI
 import edu.wpi.first.wpilibj.Timer
+import edu.wpi.first.wpilibj.drive.DifferentialDrive
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import frc.team2186.robot.Config
 import frc.team2186.robot.Robot
@@ -18,6 +19,9 @@ import frc.team2186.robot.lib.math.InterpolatingTreeMap
 import frc.team2186.robot.lib.math.Rotation2D
 import frc.team2186.robot.lib.networking.EasyNetworkTable
 import frc.team2186.robot.lib.odometry.FramesOfReference
+import frc.team2186.robot.lib.odometry.Kinematics
+import frc.team2186.robot.lib.pathfinding.Path
+import frc.team2186.robot.lib.pathfinding.PurePursuitController
 import java.io.File
 import kotlin.math.PI
 
@@ -65,6 +69,8 @@ object Drive : Subsystem(){
     private val recording = InterpolatingTreeMap<InterpolatingDouble, InterpolatingPair>()
     private var recordingFile: File? = null
     private var startTime = 0.0
+
+    private var pathFollower: PurePursuitController? = null
 
     private val networkTable = EasyNetworkTable("/drive")
 
@@ -198,6 +204,20 @@ object Drive : Subsystem(){
         gyro.reset()
     }
 
+    fun followPath(p: Path) {
+        pathFollower = PurePursuitController(
+                Config.PathFollowing.fixedLookahead,
+                Config.PathFollowing.maxAccel,
+                Config.PathFollowing.nominalDt,
+                p,
+                false,
+                Config.PathFollowing.completionTolerance
+        )
+    }
+
+    val pathFinished: Boolean
+        get() = pathFollower?.isDone ?: true
+
     @Synchronized
     fun setForwardVelocity(ips: Double) {
         leftSetpoint = ips
@@ -227,7 +247,21 @@ object Drive : Subsystem(){
 
     private fun updateVelocityHeading(): DriveData {
         println(deltaV)
-        return DriveData(leftSetpoint + deltaV / 2, rightSetpoint - deltaV / 2)
+        return DriveData(leftSetpoint - deltaV / 2, rightSetpoint + deltaV / 2)
+    }
+
+    private fun updatePathFollower(): DriveData {
+        pathFollower?.let {
+            val update = it.update(FramesOfReference.latestFieldToVehicle().value, Timer.getFPGATimestamp())
+            val vel = Kinematics.inverseKinematics(update)
+            val leftVel = vel.left
+            val rightVel = vel.right
+
+            leftSetpoint = inchesPerSecondToRPM(leftVel)
+            rightSetpoint = inchesPerSecondToRPM(rightVel)
+            gyroSetpoint = Rotation2D.fromRadians(update.deltaTheta)
+        }
+        return updateVelocityHeading()
     }
 
     private fun setMotors(controlMode: ControlMode, d: DriveData) {
@@ -249,10 +283,14 @@ object Drive : Subsystem(){
             }
             RobotState.AUTONOMOUS -> {
                 if (!velocityHeadingPID.isEnabled) velocityHeadingPID.enable()
-                Pair(ControlMode.PercentOutput, when(positionPid) {
-                    true -> DriveData(leftSetpoint, rightSetpoint)
-                    false -> convertToNative(if (useGyro) updateVelocityHeading() else DriveData(leftSetpoint, rightSetpoint))
-                })
+                Pair(
+                        ControlMode.Velocity,
+                        convertToNative(if (pathFollower != null)
+                            updatePathFollower()
+                        else if (useGyro)
+                            updateVelocityHeading()
+                        else DriveData(leftSetpoint, rightSetpoint))
+                )
             }
         })
         networkTable.apply {

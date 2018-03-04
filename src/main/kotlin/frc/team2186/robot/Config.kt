@@ -15,14 +15,14 @@ object Config {
         const val ticksPerRevolution = 1440.0
         const val ticksPer100ms = ticksPerRevolution / 600
 
-        const val kLeftP = 0.525
+        const val kLeftP = 0.52
         const val kLeftI = 0.0
         const val kLeftD = 0.425
-        const val kLeftF = 0.05
+        const val kLeftF = 0.3
 
-        const val kRightP = 0.75
+        const val kRightP = 0.52
         const val kRightI = 0.0
-        const val kRightD = 0.45
+        const val kRightD = 0.425
         const val kRightF = 0.3
 
         const val kHeadingP = 0.1
@@ -35,8 +35,8 @@ object Config {
         const val lifterMaster = 3
         const val lifterSlave = 4
         const val motorID = 1
-        const val barDownSwitch = 0
-        const val barUpSwitch = 1
+        const val barDownSwitch = 1
+        const val barUpSwitch = 0
     }
 
     object Grabber {
@@ -61,7 +61,7 @@ object Config {
     object PathFollowing {
         const val fixedLookahead = 24.0
         const val maxAccel = 100.0
-        const val nominalDt = 0.0
+        const val nominalDt = 20.0
         const val completionTolerance = 0.25
         const val maxVelocity = 100.0
 
@@ -85,6 +85,6 @@ object Config {
     }
 
     object Auto {
-        const val speed = 20.0
+        const val speed = 80.0
     }
 }

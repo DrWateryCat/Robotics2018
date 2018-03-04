@@ -11,13 +11,14 @@ object Grabber : Subsystem() {
     }
     private val right = CANMotor(Config.Grabber.Right)
 
-    var setpoint = 0.0
+    var leftSetpoint = 0.0
+    var rightSetpoint = 0.0
 
     val hasBox: Boolean
         get() = left.isStalled and right.isStalled
 
     override fun update() {
-        left.set(setpoint)
-        right.set(setpoint)
+        left.set(leftSetpoint * 0.25)
+        right.set(rightSetpoint * 0.25)
     }
 }

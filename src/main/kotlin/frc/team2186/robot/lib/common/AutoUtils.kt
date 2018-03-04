@@ -8,10 +8,8 @@ class IterativeAutoAction(val block: () -> Boolean) {
     var done = false
 
     fun run() {
-        if (done.not()) {
-            if(block()) {
-                done = true
-            }
+        if (block() == true) {
+            done = true
         }
     }
 }
@@ -60,9 +58,8 @@ class ActionRunner {
         try {
             val currentAction = actions[currentIndex]
             println("Index: $currentIndex")
-            if (currentAction.done.not()) {
-                currentAction.run()
-            } else {
+            currentAction.run()
+            if (currentAction.done) {
                 currentIndex ++
                 actionCompletedCallbacks.forEach {
                     it.invoke()

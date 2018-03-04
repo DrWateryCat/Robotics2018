@@ -217,6 +217,6 @@ class Path (vararg waypointList: Waypoint){
 typealias Waypoint = Path.Waypoint
 
 fun path(block: Path.() -> Unit): Path = Path().apply {
-    block
+    block()
     create()
 }

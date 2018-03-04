@@ -19,10 +19,10 @@ import frc.team2186.robot.subsystems.*
 class Robot : IterativeRobot() {
     var autoChooser = SendableChooser<AutonomousMode>()
     val positionChooser = SendableChooser<RobotPosition>()
+    val colorChooser = SendableChooser<Lights.Animations>()
 
     val leftJoystick = Joystick(Config.Controls.leftJoystickID)
     val rightJoystick = Joystick(Config.Controls.rightJoystickID)
-    val codriver = Joystick(Config.Controls.codriverJoystickID)
 
     val networkTable = EasyNetworkTable("/robot")
 
@@ -37,6 +37,11 @@ class Robot : IterativeRobot() {
     override fun robotInit() {
         println("Intializing")
         Drive
+        Grabber
+        Platform
+        Camera
+        RobotPoseEstimator
+
 
         Kinematics.apply {
             wheelDiameter = Config.Drive.wheelDiameter
@@ -50,6 +55,7 @@ class Robot : IterativeRobot() {
             addObject("Switch", Switch())
             addObject("Tune PID", TunePID())
             addObject("Time test", TimeTest())
+            addObject("Pure Pursuit test", PurePursuitAuto())
         }
 
         SmartDashboard.putData("autonomous", autoChooser)
@@ -61,6 +67,14 @@ class Robot : IterativeRobot() {
         }
 
         SmartDashboard.putData("position", positionChooser)
+
+        colorChooser.apply {
+            addDefault("Rainbow", Lights.Animations.RAINBOW)
+            addObject("Red", Lights.Animations.RED_ALLIANCE)
+            addObject("Blue", Lights.Animations.BLUE_ALLIANCE)
+        }
+
+        SmartDashboard.putData("animation", colorChooser)
     }
 
     override fun autonomousInit() {
@@ -78,6 +92,8 @@ class Robot : IterativeRobot() {
             autoChooser.selected.update()
         }
 
+        Lights.animation = colorChooser.selected ?: Lights.Animations.RAINBOW
+
         subsystems.forEach {
             it.update()
         }
@@ -92,19 +108,24 @@ class Robot : IterativeRobot() {
     override fun teleopPeriodic() {
         Drive.accessSync {
             Drive.leftSetpoint = leftJoystick.getRawAxis(1)
-            Drive.rightSetpoint = rightJoystick.getRawAxis(1)
+            Drive.rightSetpoint = -rightJoystick.getRawAxis(1)
         }
         Platform.setpoint = when {
             leftJoystick.getRawButton(Config.Controls.lifterUpButton) -> -0.5
             rightJoystick.getRawButton(Config.Controls.lifterUpButton) -> -0.5
             else -> 0.0
         }
-        Grabber.setpoint = when {
-            leftJoystick.getRawButton(Config.Controls.grabberButton) -> -0.25
-            rightJoystick.getRawButton(Config.Controls.grabberButton) -> 0.25
+
+        Grabber.leftSetpoint = when {
+            leftJoystick.getRawButton(4) or leftJoystick.getRawButton(1) -> 1.0
+            leftJoystick.getRawButton(5) or rightJoystick.getRawButton(1) -> -1.0
             else -> 0.0
         }
-        Lifter.setpoint = codriver.getRawAxis(1)
+        Grabber.rightSetpoint = when {
+            rightJoystick.getRawButton(5) or leftJoystick.getRawButton(1) -> 1.0
+            rightJoystick.getRawButton(4) or rightJoystick.getRawButton(1) -> -1.0
+            else -> 0.0
+        }
         subsystems.forEach {
             it.update()
         }
@@ -112,6 +133,8 @@ class Robot : IterativeRobot() {
         networkTable.apply {
             putNumber("time", DriverStation.getInstance().matchTime.toInt())
         }
+
+        Lights.animation = colorChooser.selected ?: Lights.Animations.RAINBOW
     }
 
     override fun disabledInit() {
@@ -120,6 +143,8 @@ class Robot : IterativeRobot() {
     }
 
     override fun disabledPeriodic() {
+        Lights.animation = colorChooser.selected ?: Lights.Animations.RAINBOW
+
         subsystems.forEach {
             it.update()
         }
