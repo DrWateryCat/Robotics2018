@@ -2,7 +2,9 @@ package frc.team2186.robot.lib.math
 
 import com.google.gson.JsonObject
 import frc.team2186.robot.lib.interfaces.Interpolable
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 class RigidTransform2D : Interpolable<RigidTransform2D> {
     companion object {
@@ -82,7 +84,9 @@ class RigidTransform2D : Interpolable<RigidTransform2D> {
         }
     }
 
-    class Delta(val deltaX: Double, val deltaY: Double, val deltaTheta: Double)
+    class Delta(val deltaX: Double, val deltaY: Double, val deltaTheta: Double) {
+        fun scale(factor: Double) = Delta(deltaX * factor, deltaY * factor, deltaTheta * factor)
+    }
 
     val trans: Translation2D
     val rot: Rotation2D

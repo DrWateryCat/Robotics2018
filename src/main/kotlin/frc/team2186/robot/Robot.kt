@@ -30,8 +30,7 @@ class Robot : IterativeRobot() {
             Drive,
             RobotPoseEstimator,
             Grabber,
-            Platform,
-            Lifter
+            Platform
     )
 
     override fun robotInit() {
@@ -51,7 +50,6 @@ class Robot : IterativeRobot() {
         autoChooser.apply {
             addDefault("Do Nothing", DoNothing())
             addObject("Baseline", BaselineJava())
-            addObject("Play auto", PlayAuto())
             addObject("Switch", Switch())
             addObject("Tune PID", TunePID())
             addObject("Time test", TimeTest())
@@ -80,11 +78,7 @@ class Robot : IterativeRobot() {
     override fun autonomousInit() {
         updateSwitchScale()
         autoChooser.selected.init()
-
-        CurrentMode = RobotState.AUTONOMOUS
-        Drive.inAuto = true
         Drive.reset()
-        println(CurrentMode)
     }
 
     override fun autonomousPeriodic() {
@@ -101,15 +95,11 @@ class Robot : IterativeRobot() {
 
     override fun teleopInit() {
         CurrentMode = RobotState.TELEOP
-        Drive.inAuto = false
         Drive.reset()
     }
 
     override fun teleopPeriodic() {
-        Drive.accessSync {
-            Drive.leftSetpoint = leftJoystick.getRawAxis(1)
-            Drive.rightSetpoint = -rightJoystick.getRawAxis(1)
-        }
+        Drive.tankDrive(leftJoystick.getRawAxis(1), -rightJoystick.getRawAxis(1))
         Platform.setpoint = when {
             leftJoystick.getRawButton(Config.Controls.lifterUpButton) -> -0.5
             rightJoystick.getRawButton(Config.Controls.lifterUpButton) -> -0.5
@@ -139,7 +129,6 @@ class Robot : IterativeRobot() {
 
     override fun disabledInit() {
         CurrentMode = RobotState.DISABLED
-        Drive.inAuto = false
     }
 
     override fun disabledPeriodic() {

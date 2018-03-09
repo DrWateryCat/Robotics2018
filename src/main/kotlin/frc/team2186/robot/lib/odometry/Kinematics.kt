@@ -35,7 +35,10 @@ object Kinematics {
         return currentPose.transformBy(RigidTransform2D.fromVelocity(withGyro))
     }
 
-    class DriveVelocity(val left:Double, val right:Double)
+    class DriveVelocity(val left:Double, val right:Double) {
+        operator fun component1() = left
+        operator fun component2() = right
+    }
 
     fun inverseKinematics(velocity: RigidTransform2D.Delta): DriveVelocity {
         if (abs(velocity.deltaTheta) < 1E-9) {

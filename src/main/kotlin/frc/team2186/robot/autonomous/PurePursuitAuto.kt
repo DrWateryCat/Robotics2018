@@ -3,7 +3,6 @@ package frc.team2186.robot.autonomous
 import frc.team2186.robot.Robot
 import frc.team2186.robot.common.RobotPosition
 import frc.team2186.robot.common.SwitchState
-import frc.team2186.robot.lib.common.ActionRunner
 import frc.team2186.robot.lib.common.actionRunner
 import frc.team2186.robot.lib.interfaces.SequentialAutonomousMode
 import frc.team2186.robot.lib.pathfinding.path
@@ -13,7 +12,7 @@ import frc.team2186.robot.subsystems.Platform
 class PurePursuitAuto : SequentialAutonomousMode("Pure Pursuit", false) {
     val p = path {
         waypoint {
-            speed = 55.0
+            speed = 80.0
             when (Robot.StartingPosition) {
                 RobotPosition.LEFT -> {
                     position = if (Robot.StartingSwitch == SwitchState.LEFT) {
@@ -44,10 +43,10 @@ class PurePursuitAuto : SequentialAutonomousMode("Pure Pursuit", false) {
             Drive.followPath(p)
         }
         action {
-            Drive.pathFinished
+            Drive.finishedPath
         }
         action {
-            Drive.stop()
+            Drive.tankDrive(0.0, 0.0)
 
             Platform.setpoint = -0.5
             deltaTime >= 0.5

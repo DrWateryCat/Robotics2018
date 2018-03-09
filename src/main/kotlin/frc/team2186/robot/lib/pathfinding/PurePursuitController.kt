@@ -22,7 +22,8 @@ class PurePursuitController (
     var lastTime: Double = 0.0
     var deltaTime: Double = nominalDt
 
-    val isDone = path.remainingDistance() <= completionTolerance
+    val isDone: Boolean
+        get() = path.remainingDistance() <= completionTolerance
 
     fun update(currentPose: RigidTransform2D, now: Double): RigidTransform2D.Delta {
         var pose = currentPose

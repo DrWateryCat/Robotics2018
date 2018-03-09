@@ -14,7 +14,7 @@ class TimeTest : AutonomousMode("Time Test", false) {
         Drive.setForwardVelocity(-20.0)
 
         if (deltaTime >= 5.0) {
-            Drive.stop()
+            Drive.tankDrive(0.0, 0.0)
 
             Platform.setpoint = -0.5
             if (deltaTime >= 5.5) {

@@ -1,9 +1,7 @@
 package frc.team2186.robot.autonomous
 
 import frc.team2186.robot.Config
-import frc.team2186.robot.lib.common.IterativeAutoAction
 import frc.team2186.robot.lib.common.withinRange
-import frc.team2186.robot.lib.math.Rotation2D
 import frc.team2186.robot.subsystems.Drive
 import frc.team2186.robot.subsystems.Platform
 
@@ -11,22 +9,22 @@ import frc.team2186.robot.subsystems.Platform
 object CommonAuto {
     fun goDistance(distance: Double): IterativeAutoAction {
         return IterativeAutoAction {
-            Drive.setForwardVelocity(Config.Auto.speed)
-            Drive.leftPosition > distance
+            OldDrive.setForwardVelocity(Config.Auto.speed)
+            OldDrive.leftPosition > distance
         }
     }
 
     fun turnToAngle(angle: Double): IterativeAutoAction {
         return IterativeAutoAction {
-            Drive.gyroSetpoint = Rotation2D.fromDegrees(angle)
+            OldDrive.gyroSetpoint = Rotation2D.fromDegrees(angle)
 
-            Drive.gyroAngle.degrees == angle
+            OldDrive.gyroAngle.degrees == angle
         }
     }
 
     fun stop(): Function0<Unit> {
         return {
-            Drive.stop()
+            OldDrive.stop()
             Unit
         }
     }
@@ -78,17 +76,17 @@ fun distance(length: Double): () -> Boolean {
 
 fun turnToAngle(angle: Double): () -> Boolean {
     return {
-        Drive.gyroSetpoint = Rotation2D.fromDegrees(angle)
-        withinRange(Drive.gyroAngle.degrees, angle - 1, angle + 1)
+        Drive.setVelocityVector(0.0, angle)
+        withinRange(Drive.heading, angle - 1, angle + 1)
     }
 }
 
-fun baseline(half: Boolean) = distance(103.0 / (if (half) 2 else 1))
+fun baseline(half: Boolean) = distance(85.0 / (if (half) 2 else 1))
 fun cross(half: Boolean) = distance(137.5 / (if (half) 2 else 1))
 fun heading90() = turnToAngle(90.0)
 fun heading270() = turnToAngle(270.0)
-fun moveOne() = distance(80.0)
-fun moveTwo() = distance(59.0)
+fun moveOne() = distance(40.0)
+fun moveTwo() = distance(45.0)
 fun dropBox() = {
     Platform.setpoint = -0.5
     if (Platform.isBarUp) {

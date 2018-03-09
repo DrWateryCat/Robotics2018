@@ -1,5 +1,7 @@
 package frc.team2186.robot
 
+import kotlin.math.PI
+
 object Config {
     object Drive {
         const val leftMasterID = 0
@@ -8,6 +10,7 @@ object Config {
         const val rightSlaveID = 3
 
         const val wheelDiameter: Double = 6.0
+        const val wheelCircumference = wheelDiameter * PI
         const val wheelBaseLength = 23.5
         const val trackScrubFactor: Double = 0.5
         const val effectiveWheelDiameter = (wheelDiameter * wheelDiameter + wheelBaseLength * wheelBaseLength) / wheelBaseLength

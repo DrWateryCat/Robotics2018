@@ -2,32 +2,43 @@ package frc.team2186.robot.subsystems
 
 import com.ctre.phoenix.motorcontrol.ControlMode
 import com.ctre.phoenix.motorcontrol.FeedbackDevice
-import com.google.gson.JsonObject
 import com.kauailabs.navx.frc.AHRS
-import edu.wpi.first.wpilibj.PIDController
 import edu.wpi.first.wpilibj.SPI
 import edu.wpi.first.wpilibj.Timer
-import edu.wpi.first.wpilibj.drive.DifferentialDrive
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import frc.team2186.robot.Config
-import frc.team2186.robot.Robot
-import frc.team2186.robot.common.RobotState
-import frc.team2186.robot.lib.common.*
+import frc.team2186.robot.common.SynchronousPID
+import frc.team2186.robot.lib.common.CANTalon
+import frc.team2186.robot.lib.common.CANVictor
+import frc.team2186.robot.lib.common.plus
 import frc.team2186.robot.lib.interfaces.Subsystem
-import frc.team2186.robot.lib.math.InterpolatingDouble
-import frc.team2186.robot.lib.math.InterpolatingTreeMap
 import frc.team2186.robot.lib.math.Rotation2D
 import frc.team2186.robot.lib.networking.EasyNetworkTable
 import frc.team2186.robot.lib.odometry.FramesOfReference
 import frc.team2186.robot.lib.odometry.Kinematics
 import frc.team2186.robot.lib.pathfinding.Path
 import frc.team2186.robot.lib.pathfinding.PurePursuitController
-import java.io.File
-import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.max
 
-object Drive : Subsystem(){
-    private data class DriveData(val left: Double, val right: Double)
+/*
+* This is a reimplementation of the drive subsystem
+* In theory this can be a drop-in replacement for the old drive
+* while also being easier to read and (hopefully) better at what it does
+*/
 
+object Drive : Subsystem() {
+    /*
+    * Create all the objects needed
+    * All these should be private
+    * The theory is we should only expose
+    * what we want to expose to the rest
+    * of the API
+    */
+    private enum class State {
+        TELEOP, VELOCITY_SETPOINT, VELOCITY_HEADING, PATH_FOLLOWING
+    }
+
+    //Left Motors
     private val leftSide = CANTalon(Config.Drive.leftMasterID).apply {
         configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0)
         config_kP(0, Config.Drive.kLeftP, 0)
@@ -39,6 +50,7 @@ object Drive : Subsystem(){
         enableVoltageCompensation(true)
     }
 
+    //Right Motors
     private val rightSide = CANTalon(Config.Drive.rightMasterID).apply {
         configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0)
         config_kP(0, Config.Drive.kRightP, 0)
@@ -52,159 +64,120 @@ object Drive : Subsystem(){
         inverted = true
     }
 
-    private val pidInterface = PIDInput {
-        gyroSetpoint.rotateBy(gyroAngle.inverse()).degrees
-    }
-    private val gyro = AHRS(SPI.Port.kMXP)
-    private val velocityHeadingPID = PIDController(
-            Config.Drive.kHeadingP,
-            Config.Drive.kHeadingI,
-            Config.Drive.kHeadingD,
-            Config.Drive.kHeadingF,
-            pidInterface
-    ) {
-        deltaV = it
-    }
+    //NavX
+    private val navx = AHRS(SPI.Port.kMXP)
 
-    private val recording = InterpolatingTreeMap<InterpolatingDouble, InterpolatingPair>()
-    private var recordingFile: File? = null
-    private var startTime = 0.0
+    //Current State
+    private var currentState = State.TELEOP
 
+    //Network Table
+    private val table = EasyNetworkTable("/drive")
+
+    //Path follower
+    //This is null by default
+    //Then is given a value when told to follow a path
     private var pathFollower: PurePursuitController? = null
 
-    private val networkTable = EasyNetworkTable("/drive")
+    //Synchronous PID
+    //It's a PID controller that runs in the same thread as drive
+    private val headingController = SynchronousPID(
+            Config.Drive.kHeadingP,
+            Config.Drive.kHeadingI,
+            Config.Drive.kHeadingD
+    )
 
-    @set:Synchronized
-    var useGyro = true
+    //Left setpoint
+    //In teleop this will be a value [-1.0, 1.0]
+    //Else this will be RPM
+    private var leftSetpoint = 0.0
 
-    @set:Synchronized
-    var useVelocityPid = true
+    //Right setpoint
+    //In teleop this will be a value [-1.0, 1.0]
+    //Else this will be RPM
+    private var rightSetpoint = 0.0
 
-    @set:Synchronized
-    var positionPid = false
+    //Gyro setpoint
+    //This should only be used in velocity heading mode
+    //It is a value from [0.0, 360.0)
+    private var gyroSetpoint = 0.0
 
-    @get:Synchronized
-    var isRecording = false
+    /*
+     * Math Functions
+     * These are needed to convert
+     * between all the different
+     * units everything likes to use
+    */
 
-    @get:Synchronized
-    @set:Synchronized
-    var deltaV = 0.0
+    fun ticksToInches(ticks: Double) = ticks / Config.Drive.ticksPerRevolution * Config.Drive.wheelCircumference
+    fun inchesToTicks(inches: Double) = (inches / Config.Drive.wheelCircumference) * Config.Drive.ticksPerRevolution
+    fun rpmToTicks(rpm: Double) = rpm * Config.Drive.ticksPer100ms
+    fun ticksToRPM(ticks: Double) = ticks / Config.Drive.ticksPer100ms
+    fun rpmToInchesPerSecond(rpm: Double) = rpm * Config.Drive.wheelCircumference / 60
+    fun inchesPerSecondToRPM(ips: Double) = ips * 60 / Config.Drive.wheelCircumference
+    fun ticksToInchesPerSecond(ticks: Double) = rpmToInchesPerSecond(ticksToRPM(ticks))
+    fun inchesPerSecondToTicks(ips: Double) = rpmToTicks(inchesPerSecondToRPM(ips))
 
-    @get:Synchronized
+    /*
+    * Public values come next
+    * All of these should be immutable
+    * And are just getters for the value.
+    */
+
     val leftPosition: Double
         get() = ticksToInches(-leftSide.getSelectedSensorPosition(0).toDouble())
-
-    @get:Synchronized
     val rightPosition: Double
         get() = ticksToInches(rightSide.getSelectedSensorPosition(0).toDouble())
-
-    @get:Synchronized
+    val leftSpeed: Double
+        get() = ticksToRPM(-leftSide.getSelectedSensorVelocity(0).toDouble())
+    val rightSpeed: Double
+        get() = ticksToRPM(rightSide.getSelectedSensorVelocity(0).toDouble())
     val leftVelocity: Double
         get() = ticksToInchesPerSecond(-leftSide.getSelectedSensorVelocity(0).toDouble())
-
-    @get:Synchronized
     val rightVelocity: Double
         get() = ticksToInchesPerSecond(rightSide.getSelectedSensorVelocity(0).toDouble())
+    val heading: Double
+        get() = navx.yaw.toDouble()
+    val finishedPath: Boolean
+        get() = pathFollower?.isDone ?: true
 
-    @get:Synchronized
-    val velocities: Pair<Double, Double>
-        get() = Pair(leftVelocity, rightVelocity)
+    /*
+    * Public methods
+    * These are what are actually
+    * Called by outside sources
+    * Like autonomous modes
+    */
 
-    @get:Synchronized
-    val stopped: Boolean
-        get() = velocities inRange Pair(-0.05, 0.05)
-
-    @get:Synchronized
-    val gyroAngle: Rotation2D
-        get() = Rotation2D.fromDegrees(gyro.yaw.toDouble())
-
-    @get:Synchronized
-    val compassAngle: Rotation2D
-        get() = Rotation2D.fromDegrees(gyro.compassHeading.toDouble())
-
-    @get:Synchronized
-    val fusedHeading: Rotation2D
-        get() = Rotation2D.fromDegrees(gyro.fusedHeading.toDouble())
-
-    @set:Synchronized
-    var leftSetpoint: Double = 0.0
-
-    @set:Synchronized
-    var rightSetpoint: Double = 0.0
-
-    @set:Synchronized
-    var gyroSetpoint: Rotation2D = Rotation2D.fromDegrees(0.0)
-
-    @get:Synchronized
-    @set:Synchronized
-    var inverted = false
-
-    @set:Synchronized
-    var inAuto = false
-
-    @get:Synchronized
-    val onTarget: Boolean
-        get() = velocityHeadingPID.onTarget()
-
-    fun inchesPerSecondToRPM(ips: Double): Double = ips * 60 / (Config.Drive.wheelDiameter * PI)
-    fun rpmToTicks(rpm: Double): Double = rpmToNative(rpm)
-    fun inchesPerSecondToTicks(ips: Double): Double = rpmToTicks(inchesPerSecondToRPM(ips))
-
-    fun ticksToRPM(ticks: Double): Double = nativeToRpm(ticks)
-    fun rpmToInchesPerSecond(rpm: Double): Double = rpm * (Config.Drive.wheelDiameter * PI) / 60
-    fun ticksToInchesPerSecond(ticks: Double): Double = rpmToInchesPerSecond(ticksToRPM(ticks))
-
-    init {
-        velocityHeadingPID.setOutputRange(-30.0, 30.0)
-        SmartDashboard.putData(leftSide)
-        SmartDashboard.putData(rightSide)
-        SmartDashboard.putData(velocityHeadingPID)
-    }
-
-    fun ticksToInches(ticks: Double): Double {
-        return ticks / Config.Drive.ticksPerRevolution * (Config.Drive.wheelDiameter * PI)
-    }
-
-    fun inchesToTicks(inches: Double): Double {
-        return (inches / (Config.Drive.wheelDiameter * PI)) * Config.Drive.ticksPerRevolution
-    }
-
-    fun rpmToNative(rpm: Double) = rpm * (Config.Drive.ticksPerRevolution / 600)
-    fun nativeToRpm(native: Double) = native / (Config.Drive.ticksPerRevolution / 600)
-
-    @Synchronized
-    fun record(filePath: String) {
-        recordingFile = File(filePath)
-        isRecording = true
-        startTime = Timer.getFPGATimestamp()
-    }
-
-    @Synchronized
-    fun stopRecording() {
-        isRecording = false
-        val outputData = JsonObject().apply {
-            recording.forEach { k, v ->
-                add("${k.value}", JsonObject().apply {
-                    addProperty("left_rpm", v.first)
-                    addProperty("right_rpm", v.second)
-                })
-            }
+    fun tankDrive(left: Double, right: Double) {
+        if (currentState != State.TELEOP) {
+            currentState = State.TELEOP
         }
 
-        recordingFile?.printWriter()?.print(outputData.toString())
+        leftSetpoint = left
+        rightSetpoint = right
     }
 
-    @Synchronized
-    fun reset() {
-        leftSide.setSelectedSensorPosition(0, 0, 0)
-        rightSide.setSelectedSensorPosition(0, 0, 0)
-        leftSide.setIntegralAccumulator(0.0, 0, 0)
-        rightSide.setIntegralAccumulator(0.0, 0, 0)
+    fun setForwardVelocity(ips: Double) {
+        if (currentState != State.VELOCITY_SETPOINT) {
+            currentState = State.VELOCITY_SETPOINT
+        }
+        leftSetpoint = inchesPerSecondToRPM(ips)
+        rightSetpoint = inchesPerSecondToRPM(ips)
+    }
 
-        gyro.reset()
+    fun setVelocityVector(vel: Double, heading: Double) {
+        if (currentState != State.VELOCITY_HEADING) {
+            currentState = State.VELOCITY_HEADING
+        }
+
+        leftSetpoint = vel
+        rightSetpoint = vel
+        gyroSetpoint = heading
     }
 
     fun followPath(p: Path) {
+        if (currentState != State.PATH_FOLLOWING) {
+            currentState = State.PATH_FOLLOWING
+        }
         pathFollower = PurePursuitController(
                 Config.PathFollowing.fixedLookahead,
                 Config.PathFollowing.maxAccel,
@@ -215,104 +188,105 @@ object Drive : Subsystem(){
         )
     }
 
-    val pathFinished: Boolean
-        get() = pathFollower?.isDone ?: true
-
-    @Synchronized
-    fun setForwardVelocity(ips: Double) {
-        leftSetpoint = ips
-        rightSetpoint = ips
+    //Reset the encoders and gyro
+    fun reset() {
+        leftSide.setSelectedSensorPosition(0, 0, 0)
+        rightSide.setSelectedSensorPosition(0, 0, 0)
+        navx.reset()
     }
 
-    @Synchronized
-    fun setForwardRPM(rpm: Double) {
-        leftSetpoint = rpmToInchesPerSecond(rpm)
-        rightSetpoint = rpmToInchesPerSecond(rpm)
+    /*
+    * Private methods
+    * These are used by update()
+    * To handle the velocity setpoints
+    * and path follower
+    *
+    * NOTE: We do not need an updater for teleop or velocity setpoint
+    * The talons handle that.
+    */
+
+    private fun updateVelocityHeading() {
+        //First determine the heading error
+        //I'm using my rotation2d math lib for this
+        //But in theory it's just (theta setpoint) - (actual theta)
+        val actualTheta = Rotation2D.fromDegrees(heading)
+        val headingError = Rotation2D.fromDegrees(gyroSetpoint).rotateBy(actualTheta.inverse()).degrees
+
+        //Next get the delta between the 2 sides
+        //Computed from the PID controller
+        val delta = headingController.calculate(headingError)
+
+        //Now compute the wheel velocities and set
+        val left = leftSetpoint + delta / 2
+        val right = rightSetpoint + delta / 2
+
+        setVelocity(left, right)
     }
 
-    @Synchronized
-    fun stop() {
-        useVelocityPid = false
+    private fun updatePathFollower() {
+        //Assert that the path follower is not null
+        //If it is then there's something big wrong.
+        pathFollower!!.let {
+            //First get the current robot pose
+            val currentPose = FramesOfReference.latestFieldToVehicle().value
 
-        leftSetpoint = 0.0
-        rightSetpoint = 0.0
+            //Next get the velocity command for the current path
+            val command = it.update(currentPose, Timer.getFPGATimestamp())
 
-        leftSide.stopMotor()
-        rightSide.stopMotor()
+            //Next use kinematics to get the desired left and right velocities
+            var (left, right) = Kinematics.inverseKinematics(command)
 
-        velocityHeadingPID.disable()
-    }
+            //Now scale the velocities down based on the max velocity
+            var maxVel = 0.0
+            maxVel = max(maxVel, abs(left))
+            maxVel = max(maxVel, abs(right))
 
-    private fun convertToNative(d: DriveData) = DriveData(inchesPerSecondToTicks(d.left), inchesPerSecondToTicks(d.right))
+            if (maxVel >= Config.PathFollowing.maxVelocity) {
+                val scaling = Config.PathFollowing.maxVelocity / maxVel
+                left *= scaling
+                right *= scaling
+            }
 
-    private fun updateVelocityHeading(): DriveData {
-        println(deltaV)
-        return DriveData(leftSetpoint - deltaV / 2, rightSetpoint + deltaV / 2)
-    }
-
-    private fun updatePathFollower(): DriveData {
-        pathFollower?.let {
-            val update = it.update(FramesOfReference.latestFieldToVehicle().value, Timer.getFPGATimestamp())
-            val vel = Kinematics.inverseKinematics(update)
-            val leftVel = vel.left
-            val rightVel = vel.right
-
-            leftSetpoint = inchesPerSecondToRPM(leftVel)
-            rightSetpoint = inchesPerSecondToRPM(rightVel)
-            gyroSetpoint = Rotation2D.fromRadians(update.deltaTheta)
+            //Now set
+            setVelocity(left, right)
         }
-        return updateVelocityHeading()
     }
 
-    private fun setMotors(controlMode: ControlMode, d: DriveData) {
-        leftSide.set(controlMode, d.left)
-        rightSide.set(controlMode, d.right)
+    //I don't want to rewrite code that I don't have to
+    private fun setVelocity(left: Double, right: Double) {
+        leftSide.set(ControlMode.Velocity, left)
+        rightSide.set(ControlMode.Velocity, right)
     }
 
-    private fun set(values: Pair<ControlMode, DriveData>) = setMotors(values.first, values.second)
-
-    private fun invert() = DriveData(-leftSetpoint * if(inverted) -1 else 1, rightSetpoint * if(inverted) -1 else 1)
+    //Update networktables
+    private fun updateNT() {
+        table["left_position"] = leftPosition
+        table["right_position"] = rightPosition
+        table["heading"] = heading
+        table["left_velocity"] = leftVelocity
+        table["right_velocity"] = rightVelocity
+        FramesOfReference.latestFieldToVehicle().value.apply {
+            table["x_coord"] = trans.x
+            table["y_coord"] = trans.y
+        }
+    }
 
     override fun update() {
-        set(when (Robot.CurrentMode) {
-            RobotState.DISABLED -> {
-                Pair(ControlMode.PercentOutput, DriveData(0.0, 0.0))
+        when(currentState) {
+            State.TELEOP -> {
+                leftSide.set(ControlMode.PercentOutput, leftSetpoint)
+                rightSide.set(ControlMode.PercentOutput, -rightSetpoint)
             }
-            RobotState.TELEOP -> {
-                Pair(ControlMode.PercentOutput, invert())
+            State.VELOCITY_SETPOINT -> {
+                setVelocity(leftSetpoint, rightSetpoint)
             }
-            RobotState.AUTONOMOUS -> {
-                if (!velocityHeadingPID.isEnabled) velocityHeadingPID.enable()
-                Pair(
-                        ControlMode.Velocity,
-                        convertToNative(if (pathFollower != null)
-                            updatePathFollower()
-                        else if (useGyro)
-                            updateVelocityHeading()
-                        else DriveData(leftSetpoint, rightSetpoint))
-                )
+            State.VELOCITY_HEADING -> {
+                updateVelocityHeading()
             }
-        })
-        networkTable.apply {
-            putNumber("heading", gyroAngle.degrees)
-            putNumber("left_setpoint", leftSetpoint)
-            putNumber("right_setpoint", rightSetpoint)
-            putNumber("left_velocity", leftVelocity)
-            putNumber("right_velocity", rightVelocity)
-            putNumber("left_position", leftPosition)
-            putNumber("right_position", rightPosition)
-            putNumber("left_error", leftSide.getClosedLoopError(0))
-            putNumber("right_error", rightSide.getClosedLoopError(0))
-            putString("current_mode", Robot.CurrentMode.name)
-            FramesOfReference.latestFieldToVehicle().value.trans.apply {
-                putNumber("x_coord", x)
-                putNumber("y_coord", y)
+            State.PATH_FOLLOWING -> {
+                updatePathFollower()
             }
         }
-        SmartDashboard.putNumber("left_velocity", leftVelocity)
-        SmartDashboard.putNumber("left_position", leftPosition)
-        SmartDashboard.putNumber("right_velocity", rightVelocity)
-        SmartDashboard.putNumber("right_position", rightPosition)
-        SmartDashboard.putNumber("heading", gyroAngle.degrees)
+        updateNT()
     }
 }

@@ -29,7 +29,7 @@ class Path (vararg waypointList: Waypoint){
 
         if (waypoints.size > 0) {
             val first = waypoints[0]
-            if (first.marker.isNotBlank().or(first.marker.isNotEmpty())) {
+            if (first.marker.isNotBlank() or first.marker.isNotEmpty()) {
                 markersCrossed.add(first.marker)
             }
 

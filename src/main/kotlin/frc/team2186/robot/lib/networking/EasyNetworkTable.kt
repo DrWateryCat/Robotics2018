@@ -44,4 +44,10 @@ class EasyNetworkTable (path: String){
     operator fun plusAssign(d: Data) {
         getEntry(d.key).setValue(d.value)
     }
+
+    operator fun set(key: String, value: Any) {
+        getEntry(key).setValue(value)
+    }
+
+    operator fun get(key: String): Any? = getEntry(key).value.value
 }
