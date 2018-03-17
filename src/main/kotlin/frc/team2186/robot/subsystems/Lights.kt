@@ -1,31 +1,101 @@
 package frc.team2186.robot.subsystems
 
-import com.google.gson.JsonObject
-import edu.wpi.first.wpilibj.SerialPort
+import com.google.gson.Gson
+import frc.team2186.robot.Config
+import frc.team2186.robot.lib.common.thread
 import frc.team2186.robot.lib.interfaces.Subsystem
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
 
 object Lights : Subsystem() {
-    enum class Animations {
-        RAINBOW, RED_ALLIANCE, BLUE_ALLIANCE
+    enum class Animation {
+        OFF,
+        MANUAL,
+        RAINBOW,
+        RAINBOW_CYCLE
     }
-    private var lastAnimation = Animations.RAINBOW
-    var animation = Animations.RAINBOW
+    private data class ControlData(val key: String, val value: Int)
+    private val gson = Gson()
 
-    private val json: JsonObject
-        get() = JsonObject().apply {
-            addProperty("animation", when(animation) {
-                Animations.RAINBOW -> 0
-                Animations.RED_ALLIANCE -> 1
-                Animations.BLUE_ALLIANCE -> 2
-            })
+    private var animation: Animation = Animation.OFF
+        set(value) {
+            if (field != value) {
+                field = value
+                updateController(ControlData("animation", value.ordinal))
+            }
         }
 
-    private val serial = SerialPort(9600, SerialPort.Port.kMXP)
+    private var red = 0
+        set(value) {
+            if (field != value) {
+                field = value
+                if(animation != Animation.MANUAL) {
+                    animation = Animation.MANUAL
+                }
+                updateController(ControlData("red", value))
+            }
+        }
+
+    private var green = 0
+        set(value) {
+            if (field != value) {
+                field = value
+                if(animation != Animation.MANUAL) {
+                    animation = Animation.MANUAL
+                }
+                updateController(ControlData("green", value))
+            }
+        }
+
+    private var blue = 0
+        set(value) {
+            if(field != value) {
+                field = value
+                if(animation != Animation.MANUAL) {
+                    animation = Animation.MANUAL
+                }
+                updateController(ControlData("blue", value))
+            }
+        }
+
+    fun blueAlliance() {
+        animation = Animation.MANUAL
+        red = 0
+        green = 0
+        blue = 255
+    }
+
+    fun redAlliance() {
+        animation = Animation.MANUAL
+        red = 255
+        green = 0
+        blue = 0
+    }
+
+    fun rainbow() {
+        animation = Animation.RAINBOW
+    }
+
+    fun rainbowCycle() {
+        animation = Animation.RAINBOW_CYCLE
+    }
+
+    private fun updateController(data: ControlData) = thread {
+        try {
+            val outputData = gson.toJson(data, ControlData::class.java).toByteArray()
+
+            val address = InetAddress.getByName(Config.Lights.ip)
+            val sock = DatagramSocket()
+
+            val sendPacket = DatagramPacket(outputData, outputData.size, address, Config.Lights.port)
+            sock.send(sendPacket)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("Did not send packet to raspberry pi")
+        }
+    }
 
     override fun update() {
-        if (lastAnimation != animation) {
-            lastAnimation = animation
-            serial.writeString(json.toString())
-        }
     }
 }

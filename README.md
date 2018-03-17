@@ -12,15 +12,12 @@ In order to deploy this code to the robot, follow these steps.
 5. If there are any errors, grab a mentor who knows programming.
 
 ## Current Status
-* Drive subsystem implemented and ready to test
-* Lifter implemented as far as possible
-* Autonomous paths planned out, ready for testing.
-* Odometry ready to test
-* PID ready to tune
-* LEDs ready to go
+* Grabber code working flawlessly
+* Drive code tested working in auto and teleop
+* Flipper arm working
 
 ## Current Roadmap
-* Tune the drive PID
-* Tune the lifter
-* Test the autonomous
-* Build the robot
+* Test new drive code
+* Implement LED Communications
+* Tune and test Pure Pursuit
+* Win

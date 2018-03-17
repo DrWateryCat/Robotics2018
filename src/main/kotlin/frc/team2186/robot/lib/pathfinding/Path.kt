@@ -13,6 +13,11 @@ class Path (vararg waypointList: Waypoint){
     var markersCrossed = HashSet<String>()
     var segments = ArrayList<PathSegment>()
     var waypoints: ArrayList<Waypoint> = ArrayList(waypointList.toList())
+
+    constructor(waypoints: ArrayList<frc.team2186.robot.lib.pathfinding.Waypoint>) : this() {
+        this.waypoints = waypoints
+        create()
+    }
     init {
         create()
     }
@@ -68,7 +73,7 @@ class Path (vararg waypointList: Waypoint){
             //Check if it's complete
             if(closestPointReport.index >= COMPLETE_PERCENTAGE) {
                 //Remove the waypoint
-                segments.iterator().remove()
+                segments.remove(seg)
 
                 if (waypoints.size > 0) {
                     //If there are more waypoints remove the first one, since we're there.
@@ -94,9 +99,9 @@ class Path (vararg waypointList: Waypoint){
                     val next = segments.iterator().next()
                     val nextClosestPoint = next.getClosestPoint(pos)
 
-                    if ((nextClosestPoint.index > 0)
-                            .and(nextClosestPoint.index < COMPLETE_PERCENTAGE)
-                            .and(nextClosestPoint.index < ret)) {
+                    if (((nextClosestPoint.index > 0)
+                                    and (nextClosestPoint.index < COMPLETE_PERCENTAGE))
+                            and (nextClosestPoint.index < ret)) {
                         next.updateStart(nextClosestPoint.closestPoint)
                         ret = nextClosestPoint.distance
 

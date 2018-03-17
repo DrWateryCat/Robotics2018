@@ -9,33 +9,27 @@ import frc.team2186.robot.lib.networking.EasyNetworkTable
 
 object Platform : Subsystem() {
     private val motor = VictorSP(Config.Platform.motorID)
-    private val barDown = DigitalInput(Config.Platform.barDownSwitch)
-    private val barUp = DigitalInput(Config.Platform.barUpSwitch)
+    private val switch = DigitalInput(0)
 
     private val networkTable = EasyNetworkTable("/platform")
 
     var setpoint = 0.0
 
-    val isBarDown
-        get() = barDown.get()
-
     val isBarUp
-        get() = barUp.get()
+        get() = switch.get().not()
 
     fun barUp() = IterativeAutoAction {
-        setpoint = 0.25
+        setpoint = -0.25
         isBarUp
     }
 
     fun barDown() = IterativeAutoAction {
-        setpoint = -0.25
-        isBarDown
+        setpoint = 0.0
+        true
     }
-
 
     override fun update() {
         motor.set(when {
-            isBarDown.not() or (setpoint >= 0.0) -> setpoint
             isBarUp.not() or (setpoint <= 0.0) -> setpoint
             else -> 0.0
         })

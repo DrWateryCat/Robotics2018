@@ -18,15 +18,15 @@ object Config {
         const val ticksPerRevolution = 1440.0
         const val ticksPer100ms = ticksPerRevolution / 600
 
-        const val kLeftP = 0.52
+        const val kLeftP = 0.1025
         const val kLeftI = 0.0
-        const val kLeftD = 0.425
-        const val kLeftF = 0.3
+        const val kLeftD = 1.025
+        const val kLeftF = 0.905
 
-        const val kRightP = 0.52
+        const val kRightP = 0.205
         const val kRightI = 0.0
-        const val kRightD = 0.425
-        const val kRightF = 0.3
+        const val kRightD = 1.025
+        const val kRightF = 0.905
 
         const val kHeadingP = 0.1
         const val kHeadingI = 0.0
@@ -38,8 +38,8 @@ object Config {
         const val lifterMaster = 3
         const val lifterSlave = 4
         const val motorID = 1
-        const val barDownSwitch = 1
-        const val barUpSwitch = 0
+        const val barDownSwitch = 0
+        const val barUpSwitch = 1
     }
 
     object Grabber {
@@ -87,7 +87,17 @@ object Config {
         const val cameraPort = 5801
     }
 
+    object Lights {
+        const val ip = "10.21.86.208"
+        const val port = 42069
+    }
+
+    object RecordingServer {
+        const val ip = "10.21.86.5"
+        const val port = 5804
+    }
+
     object Auto {
-        const val speed = 80.0
+        const val speed = 40.0
     }
 }

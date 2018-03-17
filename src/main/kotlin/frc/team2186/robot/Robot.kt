@@ -7,10 +7,8 @@ import edu.wpi.first.wpilibj.PowerDistributionPanel
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import frc.team2186.robot.autonomous.*
-import frc.team2186.robot.common.RobotPosition
-import frc.team2186.robot.common.RobotState
-import frc.team2186.robot.common.ScaleState
-import frc.team2186.robot.common.SwitchState
+import frc.team2186.robot.common.*
+import frc.team2186.robot.lib.common.pressedButtons
 import frc.team2186.robot.lib.interfaces.AutonomousMode
 import frc.team2186.robot.lib.networking.EasyNetworkTable
 import frc.team2186.robot.lib.odometry.Kinematics
@@ -19,7 +17,7 @@ import frc.team2186.robot.subsystems.*
 class Robot : IterativeRobot() {
     var autoChooser = SendableChooser<AutonomousMode>()
     val positionChooser = SendableChooser<RobotPosition>()
-    val colorChooser = SendableChooser<Lights.Animations>()
+    val pathChooser = SendableChooser<RecordingManager.Paths>()
 
     val leftJoystick = Joystick(Config.Controls.leftJoystickID)
     val rightJoystick = Joystick(Config.Controls.rightJoystickID)
@@ -30,7 +28,8 @@ class Robot : IterativeRobot() {
             Drive,
             RobotPoseEstimator,
             Grabber,
-            Platform
+            Platform,
+            RecordingManager
     )
 
     override fun robotInit() {
@@ -40,6 +39,7 @@ class Robot : IterativeRobot() {
         Platform
         Camera
         RobotPoseEstimator
+        RecordingManager
 
 
         Kinematics.apply {
@@ -48,13 +48,29 @@ class Robot : IterativeRobot() {
             trackScrubFactor = Config.Drive.trackScrubFactor
         }
         autoChooser.apply {
+            /*
+            Reflections("frc.team2186.robot.autonomous").getSubTypesOf(AutonomousMode::class.java).forEach {
+                val i = it.newInstance()
+                if (i.default) {
+                    addDefault(i.name, i)
+                } else {
+                    addObject(i.name, i)
+                }
+            }*/
             addDefault("Do Nothing", DoNothing())
             addObject("Baseline", BaselineJava())
             addObject("Switch", Switch())
             addObject("Tune PID", TunePID())
-            addObject("Time test", TimeTest())
-            addObject("Pure Pursuit test", PurePursuitAuto())
+            addObject("Pure Pursuit", PurePursuitAuto())
+            addObject("Play Auto", PlayPathAuto())
         }
+
+        pathChooser.apply {
+            RecordingManager.Paths.values().forEach {
+                addObject(it.name, it)
+            }
+        }
+        SmartDashboard.putData("paths", pathChooser)
 
         SmartDashboard.putData("autonomous", autoChooser)
 
@@ -65,18 +81,11 @@ class Robot : IterativeRobot() {
         }
 
         SmartDashboard.putData("position", positionChooser)
-
-        colorChooser.apply {
-            addDefault("Rainbow", Lights.Animations.RAINBOW)
-            addObject("Red", Lights.Animations.RED_ALLIANCE)
-            addObject("Blue", Lights.Animations.BLUE_ALLIANCE)
-        }
-
-        SmartDashboard.putData("animation", colorChooser)
     }
 
     override fun autonomousInit() {
         updateSwitchScale()
+        SelectedPath = pathChooser.selected!!
         autoChooser.selected.init()
         Drive.reset()
     }
@@ -85,12 +94,7 @@ class Robot : IterativeRobot() {
         if (autoChooser.selected.done().not()) {
             autoChooser.selected.update()
         }
-
-        Lights.animation = colorChooser.selected ?: Lights.Animations.RAINBOW
-
-        subsystems.forEach {
-            it.update()
-        }
+        periodic()
     }
 
     override fun teleopInit() {
@@ -99,7 +103,7 @@ class Robot : IterativeRobot() {
     }
 
     override fun teleopPeriodic() {
-        Drive.tankDrive(leftJoystick.getRawAxis(1), -rightJoystick.getRawAxis(1))
+        Drive.tankDrive(-leftJoystick.getRawAxis(1), rightJoystick.getRawAxis(1))
         Platform.setpoint = when {
             leftJoystick.getRawButton(Config.Controls.lifterUpButton) -> -0.5
             rightJoystick.getRawButton(Config.Controls.lifterUpButton) -> -0.5
@@ -116,15 +120,23 @@ class Robot : IterativeRobot() {
             rightJoystick.getRawButton(4) or rightJoystick.getRawButton(1) -> -1.0
             else -> 0.0
         }
-        subsystems.forEach {
-            it.update()
+        leftJoystick.pressedButtons().forEach {
+            when(it) {
+                8 -> {
+                    RecordingManager.record()
+                }
+                9 -> {
+                    RecordingManager.stop()
+                }
+                10 -> {
+                    RecordingManager.save()
+                }
+            }
         }
-
         networkTable.apply {
             putNumber("time", DriverStation.getInstance().matchTime.toInt())
         }
-
-        Lights.animation = colorChooser.selected ?: Lights.Animations.RAINBOW
+        periodic()
     }
 
     override fun disabledInit() {
@@ -132,8 +144,10 @@ class Robot : IterativeRobot() {
     }
 
     override fun disabledPeriodic() {
-        Lights.animation = colorChooser.selected ?: Lights.Animations.RAINBOW
+        periodic()
+    }
 
+    fun periodic() {
         subsystems.forEach {
             it.update()
         }
@@ -165,6 +179,7 @@ class Robot : IterativeRobot() {
         var StartingSwitch = SwitchState.LEFT
         var StartingScale = ScaleState.LEFT
         var StartingPosition = RobotPosition.LEFT
+        var SelectedPath = RecordingManager.Paths.LeftSwitchLeft
 
         val pdp = PowerDistributionPanel(20)
     }
