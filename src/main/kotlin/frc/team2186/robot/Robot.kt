@@ -63,6 +63,7 @@ class Robot : IterativeRobot() {
             addObject("Tune PID", TunePID())
             addObject("Pure Pursuit", PurePursuitAuto())
             addObject("Play Auto", PlayPathAuto())
+            addObject("Play Path", AutoPath())
         }
 
         pathChooser.apply {
@@ -99,7 +100,6 @@ class Robot : IterativeRobot() {
 
     override fun teleopInit() {
         CurrentMode = RobotState.TELEOP
-        Drive.reset()
     }
 
     override fun teleopPeriodic() {
